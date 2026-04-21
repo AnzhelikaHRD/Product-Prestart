@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<title>PreStart KEVIN 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#111;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:'Montserrat',sans-serif;overflow:hidden;}
+#stage-wrapper{position:relative;}
+#stage{width:1280px;height:720px;position:relative;overflow:hidden;background:#FAFAF8;background-image:radial-gradient(circle,#DCDCDC 1px,transparent 1px);background-size:28px 28px;transform-origin:top left;}
+.slide{position:absolute;top:0;left:0;width:1280px;height:720px;padding:44px 64px;opacity:0;transform:translateX(60px);transition:opacity .38s ease,transform .38s ease;pointer-events:none;}
+.slide.active{opacity:1;transform:translateX(0);pointer-events:all;}
+.slide.out{opacity:0;transform:translateX(-60px);}
+
+/* NAV */
+#progress-bar{position:absolute;bottom:0;left:0;height:4px;background:linear-gradient(90deg,#3DB4BF,#FFD300);transition:width .38s ease;z-index:100;box-shadow:0 0 10px #3DB4BFaa;}
+#slide-counter{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);font-size:11px;color:#999;font-weight:600;z-index:100;}
+#nav-dots{position:absolute;right:18px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:8px;z-index:100;}
+.dot{width:8px;height:8px;border-radius:50%;background:#CCC;cursor:pointer;transition:all .25s;}
+.dot.active{background:#3DB4BF;box-shadow:0 0 8px #3DB4BF;transform:scale(1.5);}
+#btn-prev,#btn-next{position:absolute;top:50%;transform:translateY(-50%);background:white;border:none;width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:16px;box-shadow:0 2px 12px rgba(0,0,0,.15);z-index:100;transition:all .2s;display:flex;align-items:center;justify-content:center;font-weight:700;}
+#btn-prev{left:14px;}#btn-next{right:32px;}
+#btn-prev:hover,#btn-next:hover{background:#3DB4BF;color:white;box-shadow:0 0 16px #3DB4BFaa;}
+
+/* COMMON */
+.slide-tag{display:inline-block;background:#3DB4BF;color:white;font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;padding:4px 12px;border-radius:20px;margin-bottom:10px;}
+h2.stitle{font-size:30px;font-weight:900;color:#1A1A1A;line-height:1.2;margin-bottom:18px;}
+.card{background:white;border-radius:20px;padding:22px;box-shadow:0 2px 14px rgba(0,0,0,.07);transition:transform .2s,box-shadow .2s;}
+.card:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.12);}
+.glow{position:absolute;border-radius:50%;filter:blur(80px);pointer-events:none;}
+.tag{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;}
+.tY{background:#FFD300;color:#1A1A1A;}.tT{background:#3DB4BF;color:white;}.tD{background:#1A1A1A;color:white;}.tO{background:#EB7C22;color:white;}.tP{background:#9C27B0;color:white;}
+ul.flist{list-style:none;display:flex;flex-direction:column;gap:7px;}
+ul.flist li{display:flex;align-items:flex-start;gap:8px;font-size:12.5px;color:#333;font-weight:500;line-height:1.4;}
+ul.flist li::before{content:'→';color:#3DB4BF;font-weight:800;flex-shrink:0;}
+.anim-in{animation:fadeUp .4s ease both;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+
+/* CHECKLIST */
+.check-item{display:flex;align-items:flex-start;gap:12px;padding:11px 14px;background:white;border-radius:12px;margin-bottom:8px;cursor:pointer;transition:all .2s;box-shadow:0 1px 6px rgba(0,0,0,.06);user-select:none;}
+.check-item:hover{transform:translateX(4px);box-shadow:0 2px 12px rgba(61,180,191,.25);}
+.check-item.checked{background:#E0F7FA;border-left:3px solid #3DB4BF;}
+.check-box{width:22px;height:22px;border-radius:6px;border:2px solid #DDD;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;transition:all .2s;margin-top:1px;color:transparent;}
+.check-item.checked .check-box{background:#3DB4BF;border-color:#3DB4BF;box-shadow:0 0 8px #3DB4BF66;color:white;}
+.check-text{font-size:12.5px;font-weight:500;color:#333;line-height:1.4;}
+.check-item.checked .check-text{color:#AAA;text-decoration:line-through;}
+.xp-bar-track{background:#EEE;border-radius:10px;height:7px;overflow:hidden;}
+.xp-bar-fill{height:100%;background:linear-gradient(90deg,#3DB4BF,#FFD300);border-radius:10px;transition:width .4s ease;}
+.xp-pop{position:absolute;font-size:13px;font-weight:800;color:#3DB4BF;text-shadow:0 0 8px #3DB4BF;pointer-events:none;animation:xpFloat .9s ease-out forwards;z-index:9999;}
+@keyframes xpFloat{0%{opacity:1;transform:translateY(0) scale(1);}100%{opacity:0;transform:translateY(-36px) scale(1.3);}}
+.confetti-bit{position:absolute;pointer-events:none;z-index:9999;animation:confettiFall 1.5s ease-out forwards;}
+@keyframes confettiFall{0%{opacity:1;transform:translateY(0) rotate(0deg);}100%{opacity:0;transform:translateY(200px) rotate(720deg) scale(.4);}}
+@keyframes counterPop{0%{transform:scale(.7);opacity:0;}70%{transform:scale(1.18);}100%{transform:scale(1);opacity:1;}}
+
+/* ── WIGGLE ANIMATION ── */
+@keyframes cardWiggle {
+  0%,74%,100%{transform:translateY(0) rotate(0deg);}
+  76%{transform:translateY(-5px) rotate(-2.5deg);}
+  79%{transform:translateY(-5px) rotate(2.5deg);}
+  82%{transform:translateY(-2px) rotate(-1.2deg);}
+  85%{transform:translateY(0) rotate(0deg);}
+}
+@keyframes hintPulse {
+  0%,100%{opacity:1;transform:scale(1);box-shadow:0 0 0 0 rgba(255,211,0,.6);}
+  50%{opacity:.8;transform:scale(.93);box-shadow:0 0 0 5px rgba(255,211,0,.15);}
+}
+.block-piece{
+  border-radius:14px;padding:18px 16px;cursor:pointer;
+  transition:border .25s,box-shadow .25s;
+  border:2px solid transparent;
+  user-select:none;
+  position:relative;
+  animation:cardWiggle 3.5s ease-in-out infinite;
+}
+.block-piece:hover{box-shadow:0 8px 24px rgba(0,0,0,.15);}
+.block-piece.revealed{border-color:#FFD300;box-shadow:0 0 0 3px rgba(255,211,0,.2);animation:none;}
+.block-hint{
+  position:absolute;top:-11px;right:-8px;
+  background:#FFD300;color:#1A1A1A;
+  font-size:9px;font-weight:800;
+  padding:3px 9px;border-radius:20px;
+  animation:hintPulse 1.5s ease-in-out infinite;
+  white-space:nowrap;z-index:10;pointer-events:none;
+  letter-spacing:.3px;
+}
+.block-piece.revealed .block-hint{display:none;}
+.block-detail{font-size:11px;color:#666;line-height:1.5;margin-top:8px;max-height:0;overflow:hidden;transition:max-height .35s ease,opacity .3s ease;opacity:0;}
+.block-piece.revealed .block-detail{max-height:80px;opacity:1;}
+
+/* PRO SWITCHER */
+.pro-tab{padding:8px 16px;border-radius:10px;cursor:pointer;font-size:12px;font-weight:800;transition:all .2s;background:#F0F0F0;color:#888;}
+.pro-tab.active{background:#3DB4BF;color:white;box-shadow:0 2px 10px rgba(61,180,191,.4);}
+.pro-panel{display:none;animation:fadeUp .3s ease both;}
+.pro-panel.active{display:block;}
+
+/* SUBJECT TAB */
+.subj-tab{padding:8px 20px;border-radius:10px;cursor:pointer;font-size:12px;font-weight:800;transition:all .2s;background:#F0F0F0;color:#888;}
+.subj-tab.active{background:#FFD300;color:#1A1A1A;box-shadow:0 2px 10px rgba(255,211,0,.4);}
+.subj-panel{display:none;animation:fadeUp .3s ease both;}
+.subj-panel.active{display:block;}
+
+/* MONTH TIMELINE */
+.month-dot{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;cursor:pointer;transition:all .25s;background:#E8E8E8;color:#888;flex-shrink:0;}
+.month-dot.active-m{background:#3DB4BF;color:white;box-shadow:0 0 0 4px rgba(61,180,191,.3);transform:scale(1.2);}
+.month-dot.passed{background:#FFD300;color:#1A1A1A;}
+</style>
+</head>
+<body>
+<div id="stage-wrapper">
+<div id="stage">
+
+<div id="progress-bar"></div>
+<div id="slide-counter"></div>
+<div id="nav-dots"></div>
+<button id="btn-prev">←</button>
+<button id="btn-next">→</button>
+
+<!-- =========== SLIDE 1: ОБКЛАДИНКА =========== -->
+<div class="slide active" id="s1">
+  <div class="glow" style="width:500px;height:500px;background:#3DB4BF18;top:-150px;right:60px;"></div>
+  <div class="glow" style="width:280px;height:280px;background:#FFD30014;bottom:-80px;left:200px;"></div>
+  <div style="display:flex;align-items:center;height:100%;gap:60px;">
+    <div style="flex:1;">
+      <div style="display:inline-flex;align-items:center;gap:8px;background:#1A1A1A;color:#3DB4BF;border-radius:20px;padding:6px 14px;font-size:12px;font-weight:700;margin-bottom:20px;">🌱 Блок 2 · Продукт · Презентація 2</div>
+      <div style="font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#AAA;margin-bottom:10px;">Фундаментальна програма</div>
+      <div style="font-size:46px;font-weight:900;color:#1A1A1A;line-height:1.05;margin-bottom:16px;">PreStart:<br><span style="color:#3DB4BF;text-shadow:0 0 24px #3DB4BF55;">база перед стартом</span></div>
+      <div style="font-size:14px;color:#666;font-weight:500;margin-bottom:20px;line-height:1.5;max-width:480px;">Програма для 9–10 класу: систематичне закладення фундаменту з 5 предметів перед переходом у PRO-курс</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px;">
+        <span style="background:#E0F7FA;border-radius:20px;padding:5px 14px;font-size:11px;font-weight:700;color:#006064;">9–10 клас</span>
+        <span style="background:#FFF9C4;border-radius:20px;padding:5px 14px;font-size:11px;font-weight:700;color:#B8860B;">5 предметів</span>
+        <span style="background:#F3E5F5;border-radius:20px;padding:5px 14px;font-size:11px;font-weight:700;color:#6A1B9A;">5 потоків PRO</span>
+        <span style="background:#E8F5E9;border-radius:20px;padding:5px 14px;font-size:11px;font-weight:700;color:#1B5E20;">до 5 місяців</span>
+      </div>
+      <div style="background:white;border-radius:14px;padding:14px 18px;border-left:4px solid #3DB4BF;font-size:13px;color:#444;line-height:1.5;max-width:480px;box-shadow:0 2px 10px rgba(0,0,0,.07);">
+        💡 PreStart — не підготовка до НМТ. Це фундамент, який робить Основний курс ефективним
+      </div>
+    </div>
+    <div style="width:280px;display:flex;flex-direction:column;gap:11px;">
+      <div style="background:white;border-radius:16px;padding:8px 10px 10px;box-shadow:0 2px 12px rgba(0,0,0,.08);text-align:center;"><svg width="248" height="155" viewBox="0 0 561 350" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M286.123 54.5387C281.131 50.4673 267.982 49.1438 259.781 54.5387L287.116 20.5001H296.798L286.066 54.5387H286.123Z" fill="#E4B472"/><path fill-rule="evenodd" clip-rule="evenodd" d="M287.168 20.5008L303.425 0L296.85 20.5008H287.168Z" fill="#453636"/><path fill-rule="evenodd" clip-rule="evenodd" d="M319.611 20.5008L303.354 0L309.914 20.5008H319.611Z" fill="#9B827C"/><path fill-rule="evenodd" clip-rule="evenodd" d="M309.915 20.5008L303.354 0L296.852 20.5008H309.915Z" fill="#5A4A4A"/><path fill-rule="evenodd" clip-rule="evenodd" d="M320.702 54.5819L309.913 20.5001H296.85L286.103 54.6682C297.54 48.3957 309.208 48.5683 320.702 54.6682V54.5819Z" fill="#F4D592"/><path fill-rule="evenodd" clip-rule="evenodd" d="M320.66 54.5387C326.544 49.6185 339.363 48.7841 346.887 54.5387L319.552 20.5001H309.856L320.603 54.5387H320.66Z" fill="#FDFAD7"/><path fill-rule="evenodd" clip-rule="evenodd" d="M286.134 191.748H259.519L259.778 54.5431C268.573 48.3185 277.349 48.3185 286.106 54.5431V191.748H286.134Z" fill="#DE8E2B"/><path fill-rule="evenodd" clip-rule="evenodd" d="M320.564 192.107L286.122 191.748V54.5431C297.574 48.3185 309.054 48.3185 320.564 54.5431V192.107Z" fill="#F0BD40"/><path fill-rule="evenodd" clip-rule="evenodd" d="M346.915 191.748H320.3L320.559 54.5431C329.354 48.3185 338.13 48.3185 346.886 54.5431V191.748H346.915Z" fill="#F2D065"/><path fill-rule="evenodd" clip-rule="evenodd" d="M259.543 180.021L238.467 203.24C235.906 203.298 234.741 201.859 234.971 198.924C234.971 160.685 231.935 147.406 259.788 116.202L259.543 180.064V180.021Z" fill="#5A4A4A"/><path fill-rule="evenodd" clip-rule="evenodd" d="M259.798 116.159L253.094 124.071L252.849 187.401L259.553 179.762L259.798 116.159Z" fill="#453636"/><path fill-rule="evenodd" clip-rule="evenodd" d="M303.008 82.5349C305.529 82.5349 307.993 83.2824 310.089 84.683C312.186 86.0836 313.819 88.0744 314.784 90.4035C315.749 92.7326 316.001 95.2955 315.509 97.7681C315.018 100.241 313.804 102.512 312.021 104.294C310.238 106.077 307.967 107.291 305.495 107.783C303.022 108.275 300.459 108.022 298.13 107.058C295.801 106.093 293.81 104.459 292.409 102.363C291.009 100.267 290.261 97.8024 290.261 95.2813C290.261 91.9008 291.604 88.6586 293.995 86.2682C296.385 83.8778 299.627 82.5349 303.008 82.5349V82.5349ZM303.008 70.1912C307.97 70.1912 312.821 71.6627 316.947 74.4196C321.073 77.1766 324.289 81.0951 326.188 85.6798C328.087 90.2644 328.584 95.3092 327.616 100.176C326.648 105.043 324.258 109.514 320.749 113.023C317.24 116.532 312.77 118.921 307.903 119.889C303.036 120.858 297.991 120.361 293.406 118.462C288.822 116.563 284.903 113.347 282.146 109.221C279.389 105.095 277.918 100.244 277.918 95.2813C277.916 91.9859 278.563 88.7225 279.824 85.6775C281.084 82.6326 282.932 79.8659 285.262 77.5357C287.592 75.2055 290.359 73.3574 293.404 72.0972C296.449 70.837 299.712 70.1893 303.008 70.1912V70.1912Z" fill="white"/><path fill-rule="evenodd" clip-rule="evenodd" d="M259.689 191.928H346.973V201.02C346.961 204.262 345.667 207.368 343.373 209.659C341.079 211.951 337.972 213.241 334.73 213.248H271.903C268.661 213.241 265.554 211.951 263.26 209.659C260.966 207.368 259.672 204.262 259.661 201.02V191.928H259.689Z" fill="#3DB4BF"/><path fill-rule="evenodd" clip-rule="evenodd" d="M303.008 83.5434C305.333 83.5434 307.606 84.2331 309.54 85.5253C311.473 86.8174 312.979 88.654 313.869 90.8025C314.758 92.9511 314.99 95.3152 314.535 97.5956C314.08 99.876 312.959 101.97 311.314 103.614C309.669 105.257 307.573 106.375 305.292 106.827C303.011 107.279 300.648 107.044 298.5 106.152C296.353 105.26 294.518 103.752 293.228 101.817C291.938 99.882 291.251 97.6081 291.254 95.2828C291.254 93.74 291.558 92.2123 292.149 90.787C292.74 89.3618 293.606 88.067 294.698 86.9767C295.789 85.8864 297.085 85.022 298.511 84.4329C299.937 83.8437 301.465 83.5415 303.008 83.5434V83.5434Z" fill="#76CFE5"/><path fill-rule="evenodd" clip-rule="evenodd" d="M301.131 88.6394C308.396 84.8557 315.747 95.286 308.511 101.415C309.691 95.238 307.231 90.9796 301.131 88.6394Z" fill="white"/><path fill-rule="evenodd" clip-rule="evenodd" d="M346.948 180.367L368.038 203.587C370.58 203.587 371.745 202.148 371.534 199.271C371.534 161.046 374.57 147.752 346.703 116.562L346.948 180.424V180.367Z" fill="#5A4A4A"/><path fill-rule="evenodd" clip-rule="evenodd" d="M346.789 116.82L353.493 124.733L353.738 188.063L347.034 180.423L346.789 116.82Z" fill="#453636"/><path fill-rule="evenodd" clip-rule="evenodd" d="M309.053 136.47L307.024 199.454C306.449 217.438 299.831 218.272 299.256 199.454L297.241 136.671C296.752 121.22 309.513 122.285 309.053 136.413V136.47Z" fill="#5A4A4A"/><path d="M0 237.708H30.7009V282.651L68.8397 237.708H105.238L63.3009 285.342L106.662 348.484H69.7892L41.9368 307.339L30.7009 319.841V348.484H0V237.708Z" fill="#5A4A4A"/><path d="M131.351 237.708H220.447V263.819H161.735V280.594H214.908V304.807H161.735V322.387H221.238V348.484H131.351V237.708Z" fill="#5A4A4A"/><path d="M243.869 237.708H278.21L303.372 307.828L328.534 237.708H362.242L317.298 349.275H288.813L243.869 237.708Z" fill="#5A4A4A"/><path d="M389.457 348.484H420.316V237.708H389.457V348.484Z" fill="#5A4A4A"/><path d="M456.395 237.708H485.039L530.616 296.261V237.708H561V348.484H534.097L486.78 287.715V348.484H456.395V237.708Z" fill="#5A4A4A"/><path d="M284.999 237.968L304.334 282.149L322.317 237.853L284.999 237.968Z" fill="#EFBC3F"/><path d="M295.771 237.91L304.533 257.922L312.676 237.853L295.771 237.91Z" fill="white"/><path fill-rule="evenodd" clip-rule="evenodd" d="M328.535 237.895L303.373 307.829L278.211 237.895" fill="#EB7C22"/><path fill-rule="evenodd" clip-rule="evenodd" d="M319.988 237.895L303.055 284.954L286.122 237.895" fill="#F0BD40"/><path fill-rule="evenodd" clip-rule="evenodd" d="M311.238 237.895L303.052 260.669L294.852 237.895" fill="white"/></svg></div>
+      <div style="background:#1A1A1A;border-radius:20px;padding:22px;color:white;text-align:center;">
+        <div style="font-size:52px;font-weight:900;color:#3DB4BF;line-height:1;">50</div>
+        <div style="font-size:11px;color:#AAA;margin-top:4px;">блоків / 5 місяців (PRO1)</div>
+      </div>
+      <div style="background:white;border-radius:16px;padding:14px 18px;box-shadow:0 2px 12px rgba(0,0,0,.07);display:flex;align-items:center;gap:12px;">
+        <div style="width:38px;height:38px;border-radius:10px;background:#E0F7FA;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">📖</div>
+        <div><div style="font-size:10px;color:#AAA;font-weight:500;">Теорія</div><div style="font-size:13px;font-weight:700;">8–10 уроків / блок</div></div>
+      </div>
+      <div style="background:white;border-radius:16px;padding:14px 18px;box-shadow:0 2px 12px rgba(0,0,0,.07);display:flex;align-items:center;gap:12px;">
+        <div style="width:38px;height:38px;border-radius:10px;background:#F3E5F5;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">🗣️</div>
+        <div><div style="font-size:10px;color:#AAA;font-weight:500;">Унікально</div><div style="font-size:13px;font-weight:700;">Speaking Club · Англ.</div></div>
+      </div>
+      <div style="background:white;border-radius:16px;padding:14px 18px;box-shadow:0 2px 12px rgba(0,0,0,.07);display:flex;align-items:center;gap:12px;">
+        <div style="width:38px;height:38px;border-radius:10px;background:#FFF9C4;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">🎯</div>
+        <div><div style="font-size:10px;color:#AAA;font-weight:500;">Предмети</div><div style="font-size:13px;font-weight:700;">3 основних + 2 додаткових</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =========== SLIDE 2: ВІДЕО-ПОЯСНЕННЯ =========== -->
+<div class="slide" id="s2v">
+  <div class="glow" style="width:400px;height:400px;background:#3DB4BF14;top:-100px;right:0;"></div>
+  <div class="slide-tag" style="background:#3DB4BF;color:white;">Відео</div>
+  <h2 class="stitle">Відео-пояснення PreStart <span style="font-size:14px;font-weight:500;color:#888;">· Перегляд до початку роботи</span></h2>
+  <div style="display:grid;grid-template-columns:1fr 320px;gap:22px;height:calc(100% - 120px);">
+    <div style="display:flex;flex-direction:column;gap:0;">
+      <a href="https://youtu.be/RVd4fWFI4Zw" target="_blank" style="display:block;width:100%;height:100%;border-radius:16px;overflow:hidden;position:relative;box-shadow:0 4px 24px rgba(0,0,0,.18);text-decoration:none;">
+        <img src="https://img.youtube.com/vi/RVd4fWFI4Zw/maxresdefault.jpg" style="width:100%;height:100%;object-fit:cover;display:block;">
+        <div style="position:absolute;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;transition:background .2s;" onmouseover="this.style.background='rgba(0,0,0,.5)'" onmouseout="this.style.background='rgba(0,0,0,.35)'">
+          <div style="width:72px;height:72px;background:#FF0000;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,.4);">
+            <div style="width:0;height:0;border-top:14px solid transparent;border-bottom:14px solid transparent;border-left:24px solid white;margin-left:6px;"></div>
+          </div>
+        </div>
+        <div style="position:absolute;bottom:16px;left:0;right:0;text-align:center;color:white;font-size:13px;font-weight:700;text-shadow:0 1px 4px rgba(0,0,0,.8);">▶ Натисни, щоб переглянути на YouTube</div>
+      </a>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="card" style="border-top:4px solid #3DB4BF;">
+        <div style="font-size:11px;font-weight:700;color:#AAA;letter-spacing:.8px;margin-bottom:10px;">ПРО ЩО ЦЕ ВІДЕО</div>
+        <ul class="flist">
+          <li>Що таке PreStart і для кого він</li>
+          <li>Як влаштований блок і місяць</li>
+          <li>Система потоків PRO1–PRO5</li>
+          <li>Як PreStart готує до Основного курсу</li>
+        </ul>
+      </div>
+      <div style="background:#1A1A1A;border-radius:14px;padding:14px 16px;color:white;">
+        <div style="font-size:11px;color:#3DB4BF;font-weight:700;margin-bottom:8px;">⚠️ ОБОВ'ЯЗКОВО</div>
+        <div style="font-size:12px;color:#CCC;line-height:1.5;">Перегляд цього відео — обов'язкова частина онбордингу. Після перегляду продовжуй презентацію.</div>
+      </div>
+      <div style="background:#E0F7FA;border-radius:14px;padding:14px 16px;">
+        <div style="font-size:11px;color:#006064;font-weight:700;margin-bottom:6px;">💡 Порада</div>
+        <div style="font-size:12px;color:#004D40;line-height:1.5;">Якщо виникають питання після перегляду — зафіксуй їх і постав ментору наприкінці блоку.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =========== SLIDE 3 (old 2): ЩО ТАКЕ PRESTART =========== -->
+<div class="slide" id="s2">
+  <div class="glow" style="width:360px;height:360px;background:#3DB4BF16;top:-80px;right:-40px;"></div>
+  <div class="slide-tag">Що це</div>
+  <h2 class="stitle">PreStart: фундамент перед великою підготовкою</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;height:calc(100% - 120px);">
+    <div class="card anim-in" style="border-top:4px solid #3DB4BF;display:flex;flex-direction:column;gap:12px;">
+      <div class="tag tT">🎯 Для кого</div>
+      <div style="font-size:14px;font-weight:800;color:#1A1A1A;">Учні 9–10 класу</div>
+      <div style="font-size:12px;color:#555;line-height:1.5;">яким потрібна міцна база перед вступом у старшу підготовку до НМТ</div>
+      <div style="margin-top:auto;padding:10px 12px;background:#E0F7FA;border-radius:10px;font-size:12px;color:#006064;border-left:3px solid #3DB4BF;">Підготовка охоплює ключові теми з нуля — без вимог до попередньої бази</div>
+    </div>
+    <div class="card anim-in" style="border-top:4px solid #FFD300;display:flex;flex-direction:column;gap:12px;">
+      <div class="tag tY">📦 Що включає</div>
+      <ul class="flist" style="margin-top:4px;">
+        <li>3 основних предмети: Укр.мова, Мат., Іст.</li>
+        <li>2 додаткових: Анг.мова, Біологія</li>
+        <li>Теорія у записі (8–10 уроків/блок)</li>
+        <li>Конспекти до кожного блоку</li>
+        <li>Онлайн-практикуми з викладачем</li>
+        <li>Speaking Club з англійської</li>
+        <li>Зрізи знань та пробні НМТ</li>
+        <li>Підтримка куратора щомісяця</li>
+      </ul>
+    </div>
+    <div class="card anim-in" style="border-top:4px solid #EB7C22;display:flex;flex-direction:column;gap:12px;">
+      <div class="tag tO">🏆 Результат</div>
+      <div style="font-size:12px;color:#555;line-height:1.6;">Учень вибудовує фундамент із ключових тем, набирає темп, розуміє формат підготовки KEVIN і готовий переходити до Основного курсу</div>
+      <div style="margin-top:auto;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <div style="background:#F5F5F5;border-radius:8px;padding:7px 11px;text-align:center;flex:1;">
+            <div style="font-size:22px;font-weight:900;color:#3DB4BF;">3+2</div>
+            <div style="font-size:9px;color:#888;font-weight:600;">предмети</div>
+          </div>
+          <div style="background:#F5F5F5;border-radius:8px;padding:7px 11px;text-align:center;flex:1;">
+            <div style="font-size:22px;font-weight:900;color:#FFD300;">5</div>
+            <div style="font-size:9px;color:#888;font-weight:600;">потоків PRO</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =========== SLIDE 3: АНАТОМІЯ БЛОКУ =========== -->
+<div class="slide" id="s3">
+  <div class="slide-tag">Структура блоку</div>
+  <h2 class="stitle">Анатомія одного блоку <span style="font-size:14px;font-weight:500;color:#888;">· Натисни на кожну картку</span></h2>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;height:calc(100% - 130px);">
+
+    <div class="block-piece anim-in" style="background:#1A1A1A;animation-delay:0s;" onclick="revealPiece(this)">
+      <div class="block-hint">👆 натисни</div>
+      <div style="font-size:24px;margin-bottom:8px;">🎬</div>
+      <div style="font-size:14px;font-weight:800;color:white;">Теорія</div>
+      <div style="font-size:10px;color:#FFD300;font-weight:600;margin-top:3px;">8–10 міні-уроків у записі</div>
+      <div class="block-detail" style="color:#CCC;">Концентровані відео до 15 хв кожне + конспект до кожного блоку. Більше теорії, ніж в Основному курсі — фундамент глибший.</div>
+    </div>
+
+    <div class="block-piece anim-in" style="background:#FFD300;animation-delay:.5s;" onclick="revealPiece(this)">
+      <div class="block-hint">👆 натисни</div>
+      <div style="font-size:24px;margin-bottom:8px;">💻</div>
+      <div style="font-size:14px;font-weight:800;color:#1A1A1A;">Онлайн-практикум</div>
+      <div style="font-size:10px;color:#5A4A4A;font-weight:600;margin-top:3px;">1 раз · 45 хв</div>
+      <div class="block-detail" style="color:#5A4A4A;">Живе заняття з викладачем. Відпрацювання завдань у форматі НМТ. Питання — відповіді в режимі реального часу.</div>
+    </div>
+
+    <div class="block-piece anim-in" style="background:#3DB4BF;animation-delay:1s;" onclick="revealPiece(this)">
+      <div class="block-hint">👆 натисни</div>
+      <div style="font-size:24px;margin-bottom:8px;">🎮</div>
+      <div style="font-size:14px;font-weight:800;color:white;">Kahoot загальний</div>
+      <div style="font-size:10px;color:rgba(255,255,255,.85);font-weight:600;margin-top:3px;">1 раз · кінець місяця · 2 блоки</div>
+      <div class="block-detail" style="color:rgba(255,255,255,.9);">Одна спільна вікторина на 2 блоки наприкінці місяця — не після кожного блоку. Закріплення в ігровому форматі.</div>
+    </div>
+
+    <div class="block-piece anim-in" style="background:#EB7C22;animation-delay:1.5s;" onclick="revealPiece(this)">
+      <div class="block-hint">👆 натисни</div>
+      <div style="font-size:24px;margin-bottom:8px;">📝</div>
+      <div style="font-size:14px;font-weight:800;color:white;">Домашнє завдання</div>
+      <div style="font-size:10px;color:rgba(255,255,255,.85);font-weight:600;margin-top:3px;">Після кожного міні-уроку</div>
+      <div class="block-detail" style="color:rgba(255,255,255,.9);">Завдання після кожного міні-уроку. Перевіряється автоматично. Формує регулярну навчальну дисципліну.</div>
+    </div>
+
+    <div class="block-piece anim-in" style="background:#9C27B0;animation-delay:2s;" onclick="revealPiece(this)">
+      <div class="block-hint">👆 натисни</div>
+      <div style="font-size:24px;margin-bottom:8px;">🗣️</div>
+      <div style="font-size:14px;font-weight:800;color:white;">Speaking Club</div>
+      <div style="font-size:10px;color:rgba(255,255,255,.85);font-weight:600;margin-top:3px;">Тільки англ. мова ✦ унікально</div>
+      <div class="block-detail" style="color:rgba(255,255,255,.9);">Окремий розмовний клуб для учнів англ. мови. Формат: жива дискусія, розвиток Speaking для НМТ.</div>
+    </div>
+
+    <div class="block-piece anim-in" style="background:white;border:2px solid #E8E8E8;animation-delay:2.5s;" onclick="revealPiece(this)">
+      <div class="block-hint">👆 натисни</div>
+      <div style="font-size:24px;margin-bottom:8px;">📊</div>
+      <div style="font-size:14px;font-weight:800;color:#1A1A1A;">Зріз знань</div>
+      <div style="font-size:10px;color:#3DB4BF;font-weight:600;margin-top:3px;">1 раз / місяць</div>
+      <div class="block-detail">Тематичний тест за місяць + імітація пробного НМТ щомісяця. Фіксує прогрес і відправляється у звіті батькам.</div>
+    </div>
+
+  </div>
+  <div id="reveal-progress" style="margin-top:10px;font-size:11px;color:#AAA;font-weight:600;">🔍 Відкрито: <span id="reveal-count">0</span> / 6</div>
+</div>
+
+<!-- =========== SLIDE 4: ОСНОВНИЙ VS ДОДАТКОВИЙ ПРЕДМЕТ =========== -->
+<div class="slide" id="s4">
+  <div class="slide-tag">Предмети</div>
+  <h2 class="stitle">3 основних + 2 додаткових <span style="font-size:14px;font-weight:500;color:#888;">· Вибери групу</span></h2>
+  <div style="display:flex;gap:10px;margin-bottom:18px;">
+    <div class="subj-tab active" onclick="selectSubj(0)">📚 Основні (3)</div>
+    <div class="subj-tab" onclick="selectSubj(1)">➕ Додаткові (2)</div>
+  </div>
+
+  <div id="subj-panel-0" class="subj-panel active" style="height:calc(100% - 160px);">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;height:100%;">
+      <div class="card anim-in" style="border-top:4px solid #FFD300;display:flex;flex-direction:column;gap:10px;">
+        <div style="font-size:24px;">🖊️</div>
+        <div style="font-size:16px;font-weight:800;">Укр. мова</div>
+        <ul class="flist"><li>Теорія: 8–10 уроків/блок</li><li>Практикум: 1 раз, 45 хв</li><li>Kahoot загальний (кінець міс.)</li><li>ДЗ після кожного уроку</li></ul>
+        <div style="margin-top:auto;background:#FFFDE7;border-radius:10px;padding:8px 10px;font-size:11px;color:#666;">Повне покриття програми УМ НМТ</div>
+      </div>
+      <div class="card anim-in" style="border-top:4px solid #3DB4BF;display:flex;flex-direction:column;gap:10px;">
+        <div style="font-size:24px;">📐</div>
+        <div style="font-size:16px;font-weight:800;">Математика</div>
+        <ul class="flist"><li>Теорія: 8–10 уроків/блок</li><li>Практикум: 1 раз, 45 хв</li><li>Kahoot загальний (кінець міс.)</li><li>ДЗ після кожного уроку</li></ul>
+        <div style="margin-top:auto;background:#E0F7FA;border-radius:10px;padding:8px 10px;font-size:11px;color:#006064;">Алгебра + геометрія з основ</div>
+      </div>
+      <div class="card anim-in" style="border-top:4px solid #EB7C22;display:flex;flex-direction:column;gap:10px;">
+        <div style="font-size:24px;">🏛️</div>
+        <div style="font-size:16px;font-weight:800;">Історія</div>
+        <ul class="flist"><li>Теорія: 8–10 уроків/блок</li><li>Практикум: 1 раз, 45 хв</li><li>Kahoot загальний (кінець міс.)</li><li>ДЗ після кожного уроку</li></ul>
+        <div style="margin-top:auto;background:#FFF3E0;border-radius:10px;padding:8px 10px;font-size:11px;color:#E65100;">Хронологія та події НМТ</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="subj-panel-1" class="subj-panel" style="height:calc(100% - 160px);">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;height:100%;">
+      <div class="card anim-in" style="border-top:4px solid #9C27B0;display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="font-size:24px;">🇬🇧</div>
+          <div>
+            <div style="font-size:16px;font-weight:800;">Англійська мова</div>
+            <div style="background:#9C27B0;color:white;font-size:9px;font-weight:700;padding:2px 8px;border-radius:10px;display:inline-block;margin-top:3px;">+ Speaking Club</div>
+          </div>
+        </div>
+        <ul class="flist">
+          <li>Теорія: 8–10 уроків/блок</li>
+          <li>Практикум: 1 раз, 45 хв</li>
+          <li>Kahoot загальний (кінець міс.)</li>
+          <li>ДЗ після кожного уроку</li>
+          <li style="color:#9C27B0;font-weight:700;">🗣️ Speaking Club — тільки Англ.!</li>
+        </ul>
+        <div style="margin-top:auto;background:#F3E5F5;border-radius:10px;padding:10px 12px;font-size:12px;color:#6A1B9A;border-left:3px solid #9C27B0;">Єдиний предмет у PreStart зі Speaking Club — окремий формат розмовної практики</div>
+      </div>
+      <div class="card anim-in" style="border-top:4px solid #4CAF50;display:flex;flex-direction:column;gap:10px;">
+        <div style="font-size:24px;">🔬</div>
+        <div style="font-size:16px;font-weight:800;">Біологія</div>
+        <ul class="flist">
+          <li>Теорія: 8–10 уроків/блок</li>
+          <li>Практикум: 1 раз, 45 хв</li>
+          <li>Kahoot загальний (кінець міс.)</li>
+          <li>ДЗ після кожного уроку</li>
+        </ul>
+        <div style="margin-top:auto;background:#E8F5E9;border-radius:10px;padding:10px 12px;font-size:12px;color:#1B5E20;">Базова програма: клітина, організми, еволюція, екологія</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =========== SLIDE 5: СИСТЕМА ПОТОКІВ =========== -->
+<div class="slide" id="s5">
+  <div class="slide-tag">Потоки PRO</div>
+  <h2 class="stitle">Система потоків PRO1–PRO5 <span style="font-size:14px;font-weight:500;color:#888;">· Вибери потік</span></h2>
+  <div style="display:flex;gap:8px;margin-bottom:16px;">
+    <div class="pro-tab active" onclick="selectPro(0)">PRO 1</div>
+    <div class="pro-tab" onclick="selectPro(1)">PRO 2</div>
+    <div class="pro-tab" onclick="selectPro(2)">PRO 3</div>
+    <div class="pro-tab" onclick="selectPro(3)">PRO 4</div>
+    <div class="pro-tab" onclick="selectPro(4)">PRO 5</div>
+  </div>
+  <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:18px;height:calc(100% - 155px);">
+    <div>
+      <div id="pro-panel-0" class="pro-panel active">
+        <div style="background:#1A1A1A;border-radius:18px;padding:22px;color:white;margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+            <div><div style="font-size:11px;color:#3DB4BF;font-weight:700;letter-spacing:1px;margin-bottom:4px;">БАЗОВИЙ ПОТІК</div><div style="font-size:26px;font-weight:900;">PRO 1</div></div>
+            <div style="text-align:right;"><div style="font-size:11px;color:#AAA;">Старт</div><div style="font-size:16px;font-weight:800;color:#3DB4BF;">Січень</div></div>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <div style="background:rgba(61,180,191,.2);border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:#3DB4BF;">5 місяців</div>
+            <div style="background:rgba(255,255,255,.1);border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:white;">50 блоків / всі предм.</div>
+            <div style="background:rgba(255,211,0,.15);border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:#FFD300;">2 блоки / місяць / предм.</div>
+          </div>
+        </div>
+        <ul class="flist">
+          <li>Старт січень, завершується травень</li>
+          <li>Найповніше покриття матеріалу</li>
+          <li>Оптимальний темп: 2 блоки/місяць/предмет</li>
+          <li>Формує дисципліну та навчальні звички</li>
+        </ul>
+      </div>
+      <div id="pro-panel-1" class="pro-panel">
+        <div style="background:#1A2A2A;border-radius:18px;padding:22px;color:white;margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+            <div><div style="font-size:11px;color:#3DB4BF;font-weight:700;letter-spacing:1px;margin-bottom:4px;">+1 МІС. ПІЗНІШЕ</div><div style="font-size:26px;font-weight:900;">PRO 2</div></div>
+            <div style="text-align:right;"><div style="font-size:11px;color:#AAA;">Старт</div><div style="font-size:16px;font-weight:800;color:#3DB4BF;">Лютий</div></div>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <div style="background:rgba(61,180,191,.2);border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:#3DB4BF;">4 місяці</div>
+            <div style="background:rgba(255,255,255,.1);border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:white;">50 блоків / всі предм.</div>
+            <div style="background:rgba(235,124,34,.25);border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:#EB7C22;">1 міс. доганяння</div>
+          </div>
+        </div>
+        <ul class="flist">
+          <li>Старт лютий, завершується травень</li>
+          <li>Прискорений перший місяць — закриття беклогу</li>
+          <li>Єдині контрольні точки з PRO1</li>
+        </ul>
+      </div>
+      <div id="pro-panel-2" class="pro-panel">
+        <div style="background:#1A2A1A;border-radius:18px;padding:22px;color:white;margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+            <div><div style="font-size:11px;color:#4CAF50;font-weight:700;letter-spacing:1px;margin-bottom:4px;">+2 МІС. ПІЗНІШЕ</div><div style="font-size:26px;font-weight:900;">PRO 3</div></div>
+            <div style="text-align:right;"><div style="font-size:11px;color:#AAA;">Старт</div><div style="font-size:16px;font-weight:800;color:#4CAF50;">Березень</div></div>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <div style="background:rgba(76,175,80,.2);border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:#4CAF50;">3 місяці</div>
+            <div style="background:rgba(255,255,255,.1);border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:white;">50 блоків / всі предм.</div>
+            <div style="background:rgba(235,124,34,.25);border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:#EB7C22;">2 міс. доганяння</div>
+          </div>
+        </div>
+        <ul class="flist">
+          <li>Старт березень, завершується травень</li>
+          <li>Підвищений темп перші 2 місяці</li>
+          <li>Зріз і пробний НМТ — спільні з PRO1–2</li>
+        </ul>
+      </div>
+      <div id="pro-panel-3" class="pro-panel">
+        <div style="background:#2A1A00;border-radius:18px;padding:22px;color:white;margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+            <div><div style="font-size:11px;color:#FFD300;font-weight:700;letter-spacing:1px;margin-bottom:4px;">ПРИСКОРЕНИЙ</div><div style="font-size:26px;font-weight:900;">PRO 4</div></div>
+            <div style="text-align:right;"><div style="font-size:11px;color:#AAA;">Старт</div><div style="font-size:16px;font-weight:800;color:#FFD300;">Квітень</div></div>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <div style="background:rgba(255,211,0,.2);border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:#FFD300;">2 місяці</div>
+            <div style="background:rgba(255,255,255,.1);border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:white;">50 блоків / всі предм.</div>
+            <div style="background:rgba(235,124,34,.25);border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:#EB7C22;">5 блоків / місяць / предм.</div>
+          </div>
+        </div>
+        <ul class="flist">
+          <li>Старт квітень, завершується травень</li>
+          <li>Інтенсивний формат: 5 блоків/місяць/предмет</li>
+          <li>Скорочена програма з фокусом на пріоритети НМТ</li>
+          <li>Єдині контрольні точки зі всіма потоками</li>
+        </ul>
+      </div>
+      <div id="pro-panel-4" class="pro-panel">
+        <div style="background:#1A001A;border-radius:18px;padding:22px;color:white;margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+            <div><div style="font-size:11px;color:#9C27B0;font-weight:700;letter-spacing:1px;margin-bottom:4px;">МАКСИМАЛЬНО ІНТЕНСИВНИЙ</div><div style="font-size:26px;font-weight:900;">PRO 5</div></div>
+            <div style="text-align:right;"><div style="font-size:11px;color:#AAA;">Старт</div><div style="font-size:16px;font-weight:800;color:#9C27B0;">Травень</div></div>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <div style="background:rgba(156,39,176,.2);border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:#9C27B0;">2 місяці</div>
+            <div style="background:rgba(255,255,255,.1);border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:white;">50 блоків / всі предм.</div>
+            <div style="background:rgba(235,124,34,.25);border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:#EB7C22;">5 блоків / місяць / предм.</div>
+          </div>
+        </div>
+        <ul class="flist">
+          <li>Старт травень, завершується червень</li>
+          <li>Найкоротший та найінтенсивніший формат</li>
+          <li>Максимальна концентрація пріоритетних тем</li>
+        </ul>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div class="card" style="flex:1;">
+        <div style="font-size:11px;font-weight:700;color:#AAA;letter-spacing:.8px;margin-bottom:10px;">ВСІ ПОТОКИ МАЮТЬ ОДНАКОВО</div>
+        <ul class="flist">
+          <li>Старт з нуля — без вимог до бази</li>
+          <li>Теорія 8–10 уроків / блок</li>
+          <li>Практикум онлайн щомісяця</li>
+          <li>Kahoot загальний (кінець місяця)</li>
+          <li>Зріз знань 1 раз / місяць</li>
+          <li>Пробний НМТ 1 раз / місяць</li>
+        </ul>
+      </div>
+      <div style="background:#E0F7FA;border-radius:14px;padding:14px;border-left:3px solid #3DB4BF;">
+        <div style="font-size:11px;font-weight:700;color:#006064;margin-bottom:4px;">💡 Ключова обіцянка</div>
+        <div style="font-size:12px;color:#444;line-height:1.5;">Незалежно від потоку — кожен учень отримує фундамент і переходить до Основного курсу підготовленим</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =========== SLIDE 6: ТРАЄКТОРІЯ МІСЯЦІВ =========== -->
+<div class="slide" id="s6">
+  <div class="slide-tag">Програма</div>
+  <h2 class="stitle">Повний шлях PRO1: січень → травень <span style="font-size:14px;font-weight:500;color:#888;">· Натисни на місяць</span></h2>
+  <div style="display:flex;gap:6px;align-items:center;margin-bottom:16px;flex-wrap:nowrap;">
+    <div class="month-dot active-m" onclick="selectMonth(this,0)">СІЧ</div>
+    <div style="flex:1;height:2px;background:linear-gradient(90deg,#3DB4BF,#E8E8E8);border-radius:2px;"></div>
+    <div class="month-dot" onclick="selectMonth(this,1)">ЛЮТ</div>
+    <div style="flex:1;height:2px;background:#E8E8E8;border-radius:2px;"></div>
+    <div class="month-dot" onclick="selectMonth(this,2)">БЕР</div>
+    <div style="flex:1;height:2px;background:#E8E8E8;border-radius:2px;"></div>
+    <div class="month-dot" onclick="selectMonth(this,3)">КВІ</div>
+    <div style="flex:1;height:2px;background:#E8E8E8;border-radius:2px;"></div>
+    <div class="month-dot" onclick="selectMonth(this,4)">ТРА</div>
+  </div>
+  <div id="month-card" style="background:white;border-radius:20px;padding:22px 28px;box-shadow:0 2px 16px rgba(0,0,0,.08);margin-bottom:14px;min-height:120px;border-left:5px solid #3DB4BF;transition:border-color .3s;">
+    <div style="font-size:11px;font-weight:700;color:#AAA;letter-spacing:.8px;margin-bottom:8px;" id="month-label">СІЧЕНЬ · Місяць 1</div>
+    <div style="font-size:16px;font-weight:800;color:#1A1A1A;margin-bottom:8px;" id="month-title">Старт курсу: вхідний тест + блоки 1–2</div>
+    <div style="font-size:12.5px;color:#555;line-height:1.6;" id="month-desc">Вхідний тест фіксує точку А. Перші 2 блоки з кожного предмету. Знайомство з форматом, командою, куратором. Старт PRO1.</div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;">
+    <div style="background:#FFFDE7;border-radius:12px;padding:11px 12px;border-top:3px solid #FFD300;">
+      <div style="font-size:10px;font-weight:700;color:#B8860B;margin-bottom:5px;">УКР. МОВА</div>
+      <div style="font-size:11px;color:#333;" id="subj0">Блоки 1–2 (деталі у брифі PRO1)</div>
+    </div>
+    <div style="background:#E0F7FA;border-radius:12px;padding:11px 12px;border-top:3px solid #3DB4BF;">
+      <div style="font-size:10px;font-weight:700;color:#006064;margin-bottom:5px;">МАТЕМАТИКА</div>
+      <div style="font-size:11px;color:#333;" id="subj1">Блоки 1–2 (деталі у брифі PRO1)</div>
+    </div>
+    <div style="background:#FFF3E0;border-radius:12px;padding:11px 12px;border-top:3px solid #EB7C22;">
+      <div style="font-size:10px;font-weight:700;color:#E65100;margin-bottom:5px;">ІСТОРІЯ</div>
+      <div style="font-size:11px;color:#333;" id="subj2">Блоки 1–2 (деталі у брифі PRO1)</div>
+    </div>
+    <div style="background:#F3E5F5;border-radius:12px;padding:11px 12px;border-top:3px solid #9C27B0;">
+      <div style="font-size:10px;font-weight:700;color:#6A1B9A;margin-bottom:5px;">АНГЛІЙСЬКА</div>
+      <div style="font-size:11px;color:#333;" id="subj3">Блоки 1–2 + Speaking Club</div>
+    </div>
+    <div style="background:#E8F5E9;border-radius:12px;padding:11px 12px;border-top:3px solid #4CAF50;">
+      <div style="font-size:10px;font-weight:700;color:#1B5E20;margin-bottom:5px;">БІОЛОГІЯ</div>
+      <div style="font-size:11px;color:#333;" id="subj4">Блоки 1–2 (деталі у брифі PRO1)</div>
+    </div>
+  </div>
+</div>
+
+<!-- =========== SLIDE 7: ШЛЯХ УЧНЯ =========== -->
+<div class="slide" id="s7">
+  <div class="slide-tag">Траєкторія</div>
+  <h2 class="stitle">Де PreStart у великому шляху учня</h2>
+  <div style="display:flex;flex-direction:column;gap:14px;height:calc(100% - 120px);">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div style="background:#3DB4BF;border-radius:20px;padding:18px 24px;color:white;flex:1;position:relative;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,.7);margin-bottom:6px;">ЗАРАЗ</div>
+        <div style="font-size:20px;font-weight:900;">🌱 PreStart</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.85);margin-top:5px;line-height:1.5;">Закладаємо фундамент. 5 предметів з нуля. Формуємо дисципліну і звички навчання.</div>
+        <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;">
+          <div style="background:rgba(255,255,255,.2);border-radius:8px;padding:4px 10px;font-size:10px;font-weight:700;">9–10 клас</div>
+          <div style="background:rgba(255,255,255,.2);border-radius:8px;padding:4px 10px;font-size:10px;font-weight:700;">до 5 місяців</div>
+          <div style="background:rgba(255,255,255,.2);border-radius:8px;padding:4px 10px;font-size:10px;font-weight:700;">PRO1–PRO5</div>
+        </div>
+      </div>
+      <div style="font-size:28px;font-weight:900;color:#CCC;">→</div>
+      <div style="background:white;border-radius:20px;padding:18px 24px;flex:1;box-shadow:0 2px 14px rgba(0,0,0,.08);border:2px dashed #E0E0E0;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:1px;color:#AAA;margin-bottom:6px;">ДАЛІ</div>
+        <div style="font-size:20px;font-weight:900;color:#1A1A1A;">☀️ Літня школа</div>
+        <div style="font-size:11px;color:#666;margin-top:5px;line-height:1.5;">Закріплення бази між PreStart і PRO-курсом. Мотиваційний буст і підготовка до старту 11 класу.</div>
+        <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;">
+          <div style="background:#F5F5F5;border-radius:8px;padding:4px 10px;font-size:10px;font-weight:700;color:#888;">Черв – Серп</div>
+          <div style="background:#F5F5F5;border-radius:8px;padding:4px 10px;font-size:10px;font-weight:700;color:#888;">10–11 клас</div>
+        </div>
+      </div>
+      <div style="font-size:28px;font-weight:900;color:#CCC;">→</div>
+      <div style="background:white;border-radius:20px;padding:18px 24px;flex:1;box-shadow:0 2px 14px rgba(0,0,0,.08);border:2px dashed #E0E0E0;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:1px;color:#AAA;margin-bottom:6px;">ЦІЛЬ</div>
+        <div style="font-size:20px;font-weight:900;color:#1A1A1A;">🚀 Основний курс PRO</div>
+        <div style="font-size:11px;color:#666;margin-top:5px;line-height:1.5;">Повний цикл підготовки до НМТ. 11 клас, 9 місяців, PRO1–PRO6.</div>
+        <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;">
+          <div style="background:#F5F5F5;border-radius:8px;padding:4px 10px;font-size:10px;font-weight:700;color:#888;">11 клас</div>
+          <div style="background:#FFFDE7;border-radius:8px;padding:4px 10px;font-size:10px;font-weight:700;color:#B8860B;">9 місяців</div>
+        </div>
+      </div>
+      <div style="font-size:28px;font-weight:900;color:#CCC;">→</div>
+      <div style="background:#1A1A1A;border-radius:20px;padding:18px 24px;color:white;flex:1;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:1px;color:#FFD300;margin-bottom:6px;">ФІНАЛ</div>
+        <div style="font-size:20px;font-weight:900;">🏆 НМТ</div>
+        <div style="font-size:11px;color:#AAA;margin-top:5px;line-height:1.5;">Учень, який пройшов PreStart, стартує в Основному курсі на крок попереду решти.</div>
+        <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;">
+          <div style="background:rgba(255,211,0,.2);border-radius:8px;padding:4px 10px;font-size:10px;font-weight:700;color:#FFD300;">Травень</div>
+        </div>
+      </div>
+    </div>
+    <div style="background:white;border-radius:16px;padding:16px 22px;box-shadow:0 2px 10px rgba(0,0,0,.07);display:flex;align-items:center;gap:16px;">
+      <div style="font-size:28px;">💡</div>
+      <div>
+        <div style="font-size:13px;font-weight:800;color:#1A1A1A;margin-bottom:4px;">Чому PreStart має значення?</div>
+        <div style="font-size:12px;color:#555;line-height:1.5;">Учні, які прийшли в Основний курс без бази, витрачають перші місяці на надолуження. PreStart усуває цю прогалину і дозволяє одразу включитися в повному темпі.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =========== SLIDE 8: КОНТРОЛЬНІ ТОЧКИ =========== -->
+<div class="slide" id="s8">
+  <div class="slide-tag">Контроль прогресу</div>
+  <h2 class="stitle">Три рівні контролю знань</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;height:calc(100% - 120px);">
+    <div class="card anim-in" style="border-top:5px solid #1A1A1A;display:flex;flex-direction:column;gap:12px;">
+      <div style="font-size:28px;">📋</div>
+      <div style="font-size:18px;font-weight:800;">Вхідний тест</div>
+      <div class="tag tD" style="width:fit-content;">1 раз · на старті потоку</div>
+      <div style="font-size:12px;color:#666;line-height:1.6;">Проводиться на початку кожного потоку PRO. Фіксує поточний рівень знань учня — «точку А». Відповідь на питання: з чого стартуємо?</div>
+      <div style="margin-top:auto;padding:10px 12px;background:#F5F5F5;border-radius:10px;font-size:11px;color:#666;"><strong>Хто отримує:</strong> куратор, ПМ, батьки</div>
+    </div>
+    <div class="card anim-in" style="border-top:5px solid #3DB4BF;display:flex;flex-direction:column;gap:12px;">
+      <div style="font-size:28px;">📊</div>
+      <div style="font-size:18px;font-weight:800;">Зріз знань</div>
+      <div class="tag tT" style="width:fit-content;">1 раз / місяць</div>
+      <div style="font-size:12px;color:#666;line-height:1.6;">Тематичний тест за матеріалом пройденого місяця. Відстежує прогрес і виявляє слабкі місця. Однаковий для всіх потоків.</div>
+      <div style="margin-top:auto;padding:10px 12px;background:#E0F7FA;border-radius:10px;font-size:11px;color:#006064;"><strong>Входить у звіт батькам</strong> щомісяця</div>
+    </div>
+    <div class="card anim-in" style="border-top:5px solid #FFD300;display:flex;flex-direction:column;gap:12px;">
+      <div style="font-size:28px;">🏆</div>
+      <div style="font-size:18px;font-weight:800;">Пробний НМТ</div>
+      <div class="tag tY" style="width:fit-content;">1 раз / місяць</div>
+      <div style="font-size:12px;color:#666;line-height:1.6;">Авторська симуляція НМТ: формат, час, складність — ідентичні іспиту. Знайомство з умовами та зниження стресу.</div>
+      <div style="margin-top:auto;padding:10px 12px;background:#FFFDE7;border-radius:10px;font-size:11px;color:#B8860B;"><strong>Результат аналізує</strong> куратор предмету</div>
+    </div>
+  </div>
+</div>
+
+<!-- =========== SLIDE 10: РЕСУРСИ =========== -->
+<div class="slide" id="s10r">
+  <div class="slide-tag" style="background:#3DB4BF;color:white;">Ресурси</div>
+  <h2 class="stitle">Де знайти все про PreStart</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:22px;height:calc(100% - 120px);">
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div style="font-size:11px;font-weight:700;color:#AAA;letter-spacing:.8px;margin-bottom:2px;">ОБОВ'ЯЗКОВО ДЛЯ КОЖНОГО СТАЖЕРА</div>
+      <div style="background:#1A1A1A;border-radius:16px;padding:22px;color:white;">
+        <div style="font-size:11px;color:#3DB4BF;font-weight:700;letter-spacing:1px;margin-bottom:6px;">📖 ЄДИНЕ ДЖЕРЕЛО ПРАВДИ</div>
+        <div style="font-size:18px;font-weight:900;margin-bottom:8px;">Книга відділу продукту</div>
+        <div style="font-size:12px;color:#AAA;line-height:1.5;margin-bottom:16px;">Брифи всіх потоків PRO1–PRO5, деталі програми, структура блоку, презентація для учнів — все в одному місці.</div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
+          <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:#CCC;"><span style="color:#3DB4BF;">→</span> Брифи PRO1–PRO5 по кожному потоку</div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:#CCC;"><span style="color:#3DB4BF;">→</span> Структура блоку та деталі методики</div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:#CCC;"><span style="color:#3DB4BF;">→</span> Презентація курсу для учнів і батьків</div>
+        </div>
+        <a href="https://docs.google.com/document/d/1_ieSEWDDnvks7lOgfVa7gB8CqSpW0Bmb9ovMwn--NIo/edit?tab=t.e1ip2ptdizr5" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:8px;background:#3DB4BF;color:white;border-radius:10px;padding:11px 16px;font-size:13px;font-weight:800;text-decoration:none;transition:opacity .2s;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+          📄 Відкрити книгу продукту →
+        </a>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div style="font-size:11px;font-weight:700;color:#AAA;letter-spacing:.8px;margin-bottom:2px;">ДОДАТКОВІ РЕСУРСИ</div>
+      <div class="card" style="flex:1;display:flex;flex-direction:column;gap:10px;">
+        <a href="https://docs.google.com/document/d/1_ieSEWDDnvks7lOgfVa7gB8CqSpW0Bmb9ovMwn--NIo/edit?tab=t.e1ip2ptdizr5" target="_blank" style="display:flex;align-items:center;gap:10px;padding:11px 12px;background:#E0F7FA;border-radius:10px;text-decoration:none;color:inherit;">
+          <div style="font-size:18px;">📖</div>
+          <div><div style="font-size:12px;font-weight:700;">Книга відділу продукту</div><div style="font-size:11px;color:#3DB4BF;font-weight:600;">Відкрити →</div></div>
+        </a>
+        <div style="display:flex;align-items:center;gap:10px;padding:11px 12px;background:#F5F5F5;border-radius:10px;">
+          <div style="font-size:18px;">💬</div>
+          <div><div style="font-size:12px;font-weight:700;">Запитання — до свого ментора</div><div style="font-size:11px;color:#888;">Не знаєш? Завжди є кому запитати</div></div>
+        </div>
+        <div style="margin-top:auto;padding:12px;background:#1A1A1A;border-radius:12px;color:white;font-size:12px;line-height:1.5;">
+          ⚠️ Актуальна інформація завжди в книзі продукту. Презентація — для розуміння логіки.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =========== SLIDE 11: ЧЕК-ЛИСТ =========== -->
+<div class="slide" id="s11">
+  <div class="glow" style="width:280px;height:280px;background:#3DB4BF22;bottom:-40px;right:120px;"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;height:100%;">
+    <div style="padding-top:36px;display:flex;flex-direction:column;gap:14px;">
+      <div>
+        <div class="slide-tag">Фінал</div>
+        <h2 class="stitle" style="margin-top:8px;margin-bottom:6px;">Чек-лист<br>самоперевірки</h2>
+        <div style="font-size:12px;color:#999;">Натисни на кожен пункт, коли впевнений у відповіді</div>
+      </div>
+      <div style="margin-top:auto;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <div style="font-size:10px;font-weight:700;color:#AAA;letter-spacing:.8px;text-transform:uppercase;">Прогрес знань</div>
+          <div id="xp-display2" style="background:#E0F7FA;border:1px solid #3DB4BF;border-radius:20px;padding:2px 10px;font-size:12px;font-weight:700;color:#006064;">0 / 6 ✓</div>
+        </div>
+        <div class="xp-bar-track"><div class="xp-bar-fill" id="xp-fill2" style="width:0%;"></div></div>
+      </div>
+    </div>
+    <div style="padding-top:36px;display:flex;flex-direction:column;justify-content:center;">
+      <div class="check-item" onclick="toggleCheck2(this)"><div class="check-box">✓</div><div class="check-text">Для кого PreStart і яка його головна мета?</div></div>
+      <div class="check-item" onclick="toggleCheck2(this)"><div class="check-box">✓</div><div class="check-text">З яких 6 елементів складається один блок PreStart?</div></div>
+      <div class="check-item" onclick="toggleCheck2(this)"><div class="check-box">✓</div><div class="check-text">Чим Speaking Club відрізняється від практикуму?</div></div>
+      <div class="check-item" onclick="toggleCheck2(this)"><div class="check-box">✓</div><div class="check-text">Скільки блоків і місяців у PRO4?</div></div>
+      <div class="check-item" onclick="toggleCheck2(this)"><div class="check-box">✓</div><div class="check-text">Що однакове для всіх потоків PRO1–PRO5?</div></div>
+      <div class="check-item" onclick="toggleCheck2(this)"><div class="check-box">✓</div><div class="check-text">Яка траєкторія учня після PreStart?</div></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /stage -->
+</div><!-- /stage-wrapper -->
+
+<script>
+// ── Navigation
+const TOTAL=11; let cur=0;
+const slides=document.querySelectorAll('.slide');
+const pb=document.getElementById('progress-bar');
+const scEl=document.getElementById('slide-counter');
+const nd=document.getElementById('nav-dots');
+for(let i=0;i<TOTAL;i++){const d=document.createElement('div');d.className='dot'+(i===0?' active':'');d.addEventListener('click',()=>goTo(i));nd.appendChild(d);}
+function updateUI(){slides.forEach((s,i)=>{s.classList.remove('active','out');if(i===cur)s.classList.add('active');else if(i<cur)s.classList.add('out');});document.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('active',i===cur));pb.style.width=((cur+1)/TOTAL*100)+'%';scEl.textContent=(cur+1)+' / '+TOTAL;}
+function goTo(n){cur=Math.max(0,Math.min(TOTAL-1,n));updateUI();}
+document.getElementById('btn-prev').addEventListener('click',()=>goTo(cur-1));
+document.getElementById('btn-next').addEventListener('click',()=>goTo(cur+1));
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowDown')goTo(cur+1);if(e.key==='ArrowLeft'||e.key==='ArrowUp')goTo(cur-1);});
+
+// ── Scale
+function scaleStage(){const st=document.getElementById('stage');const s=Math.min(window.innerWidth/1280,window.innerHeight/720);st.style.transform='scale('+s+')';const w=document.getElementById('stage-wrapper');w.style.width=(1280*s)+'px';w.style.height=(720*s)+'px';}
+scaleStage();window.addEventListener('resize',scaleStage);
+
+// ── Block anatomy (slide 3) — WIGGLE
+let revealCount=0;
+function revealPiece(el){
+  if(!el.classList.contains('revealed')){
+    el.classList.add('revealed');revealCount++;
+    document.getElementById('reveal-count').textContent=revealCount;
+    if(revealCount===6){setTimeout(()=>{const msg=document.createElement('div');msg.style.cssText='position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#1A1A1A;color:#3DB4BF;font-size:18px;font-weight:900;padding:14px 28px;border-radius:16px;z-index:10000;box-shadow:0 0 40px #3DB4BF44;animation:counterPop .4s ease both;';msg.textContent='🎓 Блок повністю розкрито!';document.getElementById('stage').appendChild(msg);setTimeout(()=>msg.remove(),2500);},100);}
+  } else {el.classList.remove('revealed');revealCount--;document.getElementById('reveal-count').textContent=revealCount;}
+}
+
+// ── Subject switcher (slide 4)
+function selectSubj(idx){
+  document.querySelectorAll('.subj-tab').forEach((t,i)=>t.classList.toggle('active',i===idx));
+  document.querySelectorAll('.subj-panel').forEach((p,i)=>p.classList.toggle('active',i===idx));
+}
+
+// ── PRO switcher (slide 5)
+function selectPro(idx){
+  document.querySelectorAll('.pro-tab').forEach((t,i)=>t.classList.toggle('active',i===idx));
+  document.querySelectorAll('.pro-panel').forEach((p,i)=>p.classList.toggle('active',i===idx));
+}
+
+// ── Month timeline (slide 6)
+const monthData=[
+  {label:'СІЧЕНЬ · Місяць 1',title:'Старт курсу: вхідний тест + блоки 1–2',desc:'Вхідний тест фіксує точку А. Перші 2 блоки з кожного предмету. Зріз знань + імітація пробного НМТ. Старт PRO1.',en:'Блоки 1–2 + Speaking Club'},
+  {label:'ЛЮТИЙ · Місяць 2',title:'Поглиблення + старт PRO2',desc:'Блоки 3–4. Старт PRO2 з доганяючими блоками. Зріз знань + імітація пробного НМТ.',en:'Блоки 3–4 + Speaking Club'},
+  {label:'БЕРЕЗЕНЬ · Місяць 3',title:'Середина курсу + старт PRO3',desc:'Блоки 5–6. Старт PRO3. Зріз знань + імітація пробного НМТ. Спільний для всіх потоків.',en:'Блоки 5–6 + Speaking Club'},
+  {label:'КВІТЕНЬ · Місяць 4',title:'Фінальна пряма + старт PRO4',desc:'Блоки 7–8. Старт PRO4 в прискореному форматі. Зріз знань + імітація пробного НМТ.',en:'Блоки 7–8 + Speaking Club'},
+  {label:'ТРАВЕНЬ · Місяць 5',title:'Фінал PreStart + старт PRO5',desc:'Блоки 9–10. Зріз знань + імітація пробного НМТ. Старт PRO5. Перехід в Основний курс.',en:'Блоки 9–10 + Speaking Club'}
+];
+function selectMonth(el,idx){
+  document.querySelectorAll('.month-dot').forEach((d,i)=>{d.classList.toggle('active-m',i===idx);d.classList.toggle('passed',i<idx);});
+  const d=monthData[idx];
+  document.getElementById('month-label').textContent=d.label;
+  document.getElementById('month-title').textContent=d.title;
+  document.getElementById('month-desc').textContent=d.desc;
+  const n=(idx+1)*2;
+  ['subj0','subj1','subj2','subj4'].forEach(id=>{document.getElementById(id).textContent='Блоки '+(idx*2+1)+'–'+n+' (деталі у брифі PRO1)';});
+  document.getElementById('subj3').textContent=d.en;
+  document.getElementById('month-card').style.borderColor=['#3DB4BF','#FFD300','#4CAF50','#EB7C22','#9C27B0'][idx];
+}
+
+// ── Checklist (slide 9)
+let checked2=0;
+function toggleCheck2(el){
+  el.classList.toggle('checked');
+  checked2=document.querySelectorAll('.check-item.checked').length;
+  document.getElementById('xp-display2').textContent=checked2+' / 6 ✓';
+  document.getElementById('xp-fill2').style.width=(checked2/6*100)+'%';
+  if(el.classList.contains('checked')){showXP2(el);if(checked2===6)launchConfetti2();}
+}
+function showXP2(el){const pop=document.createElement('div');pop.className='xp-pop';pop.textContent='+1 ✓';const r=el.getBoundingClientRect();const sr=document.getElementById('stage').getBoundingClientRect();const sc=parseFloat(document.getElementById('stage').style.transform.replace('scale(',''))||1;pop.style.left=((r.right-sr.left)/sc+8)+'px';pop.style.top=((r.top-sr.top)/sc)+'px';document.getElementById('stage').appendChild(pop);setTimeout(()=>pop.remove(),900);}
+function launchConfetti2(){const colors=['#3DB4BF','#FFD300','#EB7C22','#9C27B0','#4CAF50'];for(let i=0;i<70;i++){setTimeout(()=>{const c=document.createElement('div');c.className='confetti-bit';const size=5+Math.random()*8;c.style.cssText=`left:${5+Math.random()*90}%;top:${10+Math.random()*50}%;background:${colors[Math.floor(Math.random()*colors.length)]};width:${size}px;height:${size}px;border-radius:${Math.random()>.5?'50%':'3px'};animation-duration:${1+Math.random()*.8}s;animation-delay:${Math.random()*.2}s;`;document.getElementById('stage').appendChild(c);setTimeout(()=>c.remove(),2000);},i*25);}const msg=document.createElement('div');msg.style.cssText='position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#1A1A1A;color:#3DB4BF;font-size:20px;font-weight:900;padding:16px 32px;border-radius:20px;z-index:10000;box-shadow:0 0 40px #3DB4BF44;animation:counterPop .4s ease both;';msg.textContent='🏆 PreStart засвоєно!';document.getElementById('stage').appendChild(msg);setTimeout(()=>msg.remove(),2800);}
+
+updateUI();
+</script>
+</body>
+</html>
