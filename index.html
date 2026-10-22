@@ -104,11 +104,43 @@ ul.flist li::before{content:'→';color:#3DB4BF;font-weight:800;flex-shrink:0;}
 .month-dot{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;cursor:pointer;transition:all .25s;background:#E8E8E8;color:#888;flex-shrink:0;}
 .month-dot.active-m{background:#3DB4BF;color:white;box-shadow:0 0 0 4px rgba(61,180,191,.3);transform:scale(1.2);}
 .month-dot.passed{background:#FFD300;color:#1A1A1A;}
+
+/* --- gamification + interactivity --- */
+#hud{position:absolute;top:14px;right:70px;z-index:120;background:#1A1A1A;color:#fff;border-radius:20px;padding:6px 14px;font-size:11.4px;font-weight:800;display:flex;gap:10px;align-items:center;box-shadow:0 4px 14px rgba(0,0,0,.2);}
+#hud .bar{width:90px;height:6px;background:#333;border-radius:6px;overflow:hidden;}
+#hud .fill{height:100%;width:0;background:linear-gradient(90deg,#3DB4BF,#FFD300);transition:width .4s ease;}
+#badge-toast{position:absolute;left:50%;top:18px;transform:translate(-50%,-140px);background:#FFD300;color:#1A1A1A;padding:10px 20px;border-radius:14px;font-weight:900;font-size:12px;z-index:130;transition:transform .45s cubic-bezier(.2,.9,.3,1.2);box-shadow:0 6px 22px rgba(255,211,0,.5);}
+#badge-toast.show{transform:translate(-50%,0);}
+.pickable{cursor:pointer;transition:transform .25s,box-shadow .25s,border-color .25s;}
+.pickable:hover{transform:translateY(-4px);box-shadow:0 12px 28px rgba(0,0,0,.14);}
+.pickable.picked{transform:translateY(-3px);box-shadow:0 0 0 2px #FFD300,0 14px 30px rgba(255,211,0,.35);}
+.slide b,.slide strong{background:linear-gradient(transparent 58%,rgba(255,211,0,.55) 58%);padding:0 2px;border-radius:2px;}
+.tap-pill{position:absolute;top:58px;right:70px;background:#1A1A1A;color:#FFD300;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:800;z-index:5;box-shadow:0 4px 12px rgba(0,0,0,.2);transition:transform .2s;}
+.tap-pill.full{background:#FFD300;color:#1A1A1A;}
+.tap-pill:hover{transform:scale(1.05);}
+.flow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:4px;}
+.flow-step{background:#F5F5F5;border-radius:20px;padding:6px 12px;font-size:11px;font-weight:700;color:#333;cursor:pointer;transition:transform .2s,background .2s;}
+.flow-step:hover{transform:translateY(-2px);background:#FFD300;}
+.flow-step.picked{background:#3DB4BF;color:white;}
+.flow-arrow{color:#AAA;font-weight:800;}
+.note-hl{margin-top:14px;padding:10px 12px;background:#FFFDE7;border-left:3px solid #FFD300;border-radius:10px;font-size:11.5px;color:#5A4A4A;line-height:1.5;}
+#more-panel{position:absolute;left:64px;right:64px;bottom:16px;background:#1A1A1A;color:#fff;border-radius:14px;padding:10px 16px;font-size:12px;font-weight:600;line-height:1.45;z-index:110;opacity:0;transform:translateY(10px);transition:opacity .3s,transform .3s;pointer-events:none;}#more-panel.show{opacity:1;transform:translateY(0);}#more-panel b{color:#FFD300;}
+/* stagger entrance: blocks drop in one by one each time a slide opens */
+@keyframes dropIn{from{opacity:0;transform:translateY(18px) scale(.98);}to{opacity:1;transform:none;}}
+.slide.active .card,.slide.active .block-piece,.slide.active .flow-step,.slide.active .note-hl,.slide.active .check-item,.slide.active .stagger{animation:dropIn .55s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:var(--d,0s);}
+.more-inline{margin-top:12px;padding:10px 12px;background:#FFFDE7;border-left:3px solid #FFD300;border-radius:10px;font-size:11.5px;color:#5A4A4A;line-height:1.5;font-weight:500;}
+.more-inline b{color:#B8860B;}
+.more-inline.pop{animation:dropIn .35s ease backwards;}
+.more-open{box-shadow:0 0 0 2px #FFD300,0 10px 26px rgba(255,211,0,.3)!important;}
+.subj-card{background:white;border-radius:20px;box-shadow:0 2px 14px rgba(0,0,0,.07);}
+.slide.active .subj-card{animation:dropIn .55s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:var(--d,0s);}
 </style>
 </head>
 <body>
 <div id="stage-wrapper">
 <div id="stage">
+<div id="hud"><span>⭐ <span id="xp-val">0</span> XP</span><div class="bar"><div class="fill" id="xp-bar"></div></div></div>
+<div id="badge-toast"></div>
 
 <div id="progress-bar"></div>
 <div id="slide-counter"></div>
@@ -124,39 +156,39 @@ ul.flist li::before{content:'→';color:#3DB4BF;font-weight:800;flex-shrink:0;}
     <div style="flex:1;">
       <div style="display:inline-flex;align-items:center;gap:8px;background:#1A1A1A;color:#3DB4BF;border-radius:20px;padding:6px 14px;font-size:12px;font-weight:700;margin-bottom:20px;">🌱 Блок 2 · Продукт · Презентація 2</div>
       <div style="font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#AAA;margin-bottom:10px;">Вебінарний курс · Фундаментальна програма</div>
-      <div style="font-size:46px;font-weight:900;color:#1A1A1A;line-height:1.05;margin-bottom:16px;">PreStart:<br><span style="color:#3DB4BF;text-shadow:0 0 24px #3DB4BF55;">1,5-річний маршрут до НМТ</span></div>
-      <div style="font-size:14px;color:#666;font-weight:500;margin-bottom:20px;line-height:1.5;max-width:480px;">Програма для 10 класу: системне закладення фундаменту з 5 предметів на 1,5 роки — від PreStart до Інтенсиву перед НМТ</div>
+      <div style="font-size:46px;font-weight:900;color:#1A1A1A;line-height:1.05;margin-bottom:16px;">PreStart:<br><span style="color:#3DB4BF;text-shadow:0 0 24px #3DB4BF55;">Маршрут до НМТ з 10 класу</span></div>
+      <div style="font-size:14px;color:#666;font-weight:500;margin-bottom:20px;line-height:1.5;max-width:480px;">Програма для 10 класу: закладення фундаменту з 5 предметів — від PreStart до Інтенсиву перед НМТ</div>
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px;">
         <span style="background:#E0F7FA;border-radius:20px;padding:5px 14px;font-size:11px;font-weight:700;color:#006064;">10 клас</span>
         <span style="background:#FFF9C4;border-radius:20px;padding:5px 14px;font-size:11px;font-weight:700;color:#B8860B;">5 предметів</span>
-        <span style="background:#F3E5F5;border-radius:20px;padding:5px 14px;font-size:11px;font-weight:700;color:#6A1B9A;">3 потоки PRO</span>
-        <span style="background:#E8F5E9;border-radius:20px;padding:5px 14px;font-size:11px;font-weight:700;color:#1B5E20;">січ 2026 – трав 2027</span>
+        <span style="background:#F3E5F5;border-radius:20px;padding:5px 14px;font-size:11px;font-weight:700;color:#6A1B9A;">4 потоки PRO</span>
+        <span style="background:#E8F5E9;border-radius:20px;padding:5px 14px;font-size:11px;font-weight:700;color:#1B5E20;">січень – травень</span>
       </div>
       <div style="background:white;border-radius:14px;padding:14px 18px;border-left:4px solid #3DB4BF;font-size:13px;color:#444;line-height:1.5;max-width:480px;box-shadow:0 2px 10px rgba(0,0,0,.07);">
-        💡 PreStart — повний маршрут до НМТ: від фундаменту в 10 класі до реального іспиту в травні 2027
+        💡 PreStart — повний маршрут до НМТ: фундамент у 10 класі, далі Літня школа і Основний курс; PreStart не готує до НМТ цього року
       </div>
     </div>
     <div style="width:280px;display:flex;flex-direction:column;gap:11px;">
       <div style="background:white;border-radius:16px;padding:8px 10px 10px;box-shadow:0 2px 12px rgba(0,0,0,.08);text-align:center;"><svg width="248" height="155" viewBox="0 0 561 350" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M286.123 54.5387C281.131 50.4673 267.982 49.1438 259.781 54.5387L287.116 20.5001H296.798L286.066 54.5387H286.123Z" fill="#E4B472"/><path fill-rule="evenodd" clip-rule="evenodd" d="M287.168 20.5008L303.425 0L296.85 20.5008H287.168Z" fill="#453636"/><path fill-rule="evenodd" clip-rule="evenodd" d="M319.611 20.5008L303.354 0L309.914 20.5008H319.611Z" fill="#9B827C"/><path fill-rule="evenodd" clip-rule="evenodd" d="M309.915 20.5008L303.354 0L296.852 20.5008H309.915Z" fill="#5A4A4A"/><path fill-rule="evenodd" clip-rule="evenodd" d="M320.702 54.5819L309.913 20.5001H296.85L286.103 54.6682C297.54 48.3957 309.208 48.5683 320.702 54.6682V54.5819Z" fill="#F4D592"/><path fill-rule="evenodd" clip-rule="evenodd" d="M320.66 54.5387C326.544 49.6185 339.363 48.7841 346.887 54.5387L319.552 20.5001H309.856L320.603 54.5387H320.66Z" fill="#FDFAD7"/><path fill-rule="evenodd" clip-rule="evenodd" d="M286.134 191.748H259.519L259.778 54.5431C268.573 48.3185 277.349 48.3185 286.106 54.5431V191.748H286.134Z" fill="#DE8E2B"/><path fill-rule="evenodd" clip-rule="evenodd" d="M320.564 192.107L286.122 191.748V54.5431C297.574 48.3185 309.054 48.3185 320.564 54.5431V192.107Z" fill="#F0BD40"/><path fill-rule="evenodd" clip-rule="evenodd" d="M346.915 191.748H320.3L320.559 54.5431C329.354 48.3185 338.13 48.3185 346.886 54.5431V191.748H346.915Z" fill="#F2D065"/><path fill-rule="evenodd" clip-rule="evenodd" d="M259.543 180.021L238.467 203.24C235.906 203.298 234.741 201.859 234.971 198.924C234.971 160.685 231.935 147.406 259.788 116.202L259.543 180.064V180.021Z" fill="#5A4A4A"/><path fill-rule="evenodd" clip-rule="evenodd" d="M259.798 116.159L253.094 124.071L252.849 187.401L259.553 179.762L259.798 116.159Z" fill="#453636"/><path fill-rule="evenodd" clip-rule="evenodd" d="M303.008 82.5349C305.529 82.5349 307.993 83.2824 310.089 84.683C312.186 86.0836 313.819 88.0744 314.784 90.4035C315.749 92.7326 316.001 95.2955 315.509 97.7681C315.018 100.241 313.804 102.512 312.021 104.294C310.238 106.077 307.967 107.291 305.495 107.783C303.022 108.275 300.459 108.022 298.13 107.058C295.801 106.093 293.81 104.459 292.409 102.363C291.009 100.267 290.261 97.8024 290.261 95.2813C290.261 91.9008 291.604 88.6586 293.995 86.2682C296.385 83.8778 299.627 82.5349 303.008 82.5349V82.5349ZM303.008 70.1912C307.97 70.1912 312.821 71.6627 316.947 74.4196C321.073 77.1766 324.289 81.0951 326.188 85.6798C328.087 90.2644 328.584 95.3092 327.616 100.176C326.648 105.043 324.258 109.514 320.749 113.023C317.24 116.532 312.77 118.921 307.903 119.889C303.036 120.858 297.991 120.361 293.406 118.462C288.822 116.563 284.903 113.347 282.146 109.221C279.389 105.095 277.918 100.244 277.918 95.2813C277.916 91.9859 278.563 88.7225 279.824 85.6775C281.084 82.6326 282.932 79.8659 285.262 77.5357C287.592 75.2055 290.359 73.3574 293.404 72.0972C296.449 70.837 299.712 70.1893 303.008 70.1912V70.1912Z" fill="white"/><path fill-rule="evenodd" clip-rule="evenodd" d="M259.689 191.928H346.973V201.02C346.961 204.262 345.667 207.368 343.373 209.659C341.079 211.951 337.972 213.241 334.73 213.248H271.903C268.661 213.241 265.554 211.951 263.26 209.659C260.966 207.368 259.672 204.262 259.661 201.02V191.928H259.689Z" fill="#3DB4BF"/><path fill-rule="evenodd" clip-rule="evenodd" d="M303.008 83.5434C305.333 83.5434 307.606 84.2331 309.54 85.5253C311.473 86.8174 312.979 88.654 313.869 90.8025C314.758 92.9511 314.99 95.3152 314.535 97.5956C314.08 99.876 312.959 101.97 311.314 103.614C309.669 105.257 307.573 106.375 305.292 106.827C303.011 107.279 300.648 107.044 298.5 106.152C296.353 105.26 294.518 103.752 293.228 101.817C291.938 99.882 291.251 97.6081 291.254 95.2828C291.254 93.74 291.558 92.2123 292.149 90.787C292.74 89.3618 293.606 88.067 294.698 86.9767C295.789 85.8864 297.085 85.022 298.511 84.4329C299.937 83.8437 301.465 83.5415 303.008 83.5434V83.5434Z" fill="#76CFE5"/><path fill-rule="evenodd" clip-rule="evenodd" d="M301.131 88.6394C308.396 84.8557 315.747 95.286 308.511 101.415C309.691 95.238 307.231 90.9796 301.131 88.6394Z" fill="white"/><path fill-rule="evenodd" clip-rule="evenodd" d="M346.948 180.367L368.038 203.587C370.58 203.587 371.745 202.148 371.534 199.271C371.534 161.046 374.57 147.752 346.703 116.562L346.948 180.424V180.367Z" fill="#5A4A4A"/><path fill-rule="evenodd" clip-rule="evenodd" d="M346.789 116.82L353.493 124.733L353.738 188.063L347.034 180.423L346.789 116.82Z" fill="#453636"/><path fill-rule="evenodd" clip-rule="evenodd" d="M309.053 136.47L307.024 199.454C306.449 217.438 299.831 218.272 299.256 199.454L297.241 136.671C296.752 121.22 309.513 122.285 309.053 136.413V136.47Z" fill="#5A4A4A"/><path d="M0 237.708H30.7009V282.651L68.8397 237.708H105.238L63.3009 285.342L106.662 348.484H69.7892L41.9368 307.339L30.7009 319.841V348.484H0V237.708Z" fill="#5A4A4A"/><path d="M131.351 237.708H220.447V263.819H161.735V280.594H214.908V304.807H161.735V322.387H221.238V348.484H131.351V237.708Z" fill="#5A4A4A"/><path d="M243.869 237.708H278.21L303.372 307.828L328.534 237.708H362.242L317.298 349.275H288.813L243.869 237.708Z" fill="#5A4A4A"/><path d="M389.457 348.484H420.316V237.708H389.457V348.484Z" fill="#5A4A4A"/><path d="M456.395 237.708H485.039L530.616 296.261V237.708H561V348.484H534.097L486.78 287.715V348.484H456.395V237.708Z" fill="#5A4A4A"/><path d="M284.999 237.968L304.334 282.149L322.317 237.853L284.999 237.968Z" fill="#EFBC3F"/><path d="M295.771 237.91L304.533 257.922L312.676 237.853L295.771 237.91Z" fill="white"/><path fill-rule="evenodd" clip-rule="evenodd" d="M328.535 237.895L303.373 307.829L278.211 237.895" fill="#EB7C22"/><path fill-rule="evenodd" clip-rule="evenodd" d="M319.988 237.895L303.055 284.954L286.122 237.895" fill="#F0BD40"/><path fill-rule="evenodd" clip-rule="evenodd" d="M311.238 237.895L303.052 260.669L294.852 237.895" fill="white"/></svg></div>
       <div style="background:#1A1A1A;border-radius:20px;padding:22px;color:white;text-align:center;">
-        <div style="font-size:52px;font-weight:900;color:#3DB4BF;line-height:1;">230</div>
-        <div style="font-size:11px;color:#AAA;margin-top:4px;">блоків за 1,5 роки (PRO1)</div>
+        <div style="font-size:52px;font-weight:900;color:#3DB4BF;line-height:1;">4–5</div>
+        <div style="font-size:11px;color:#AAA;margin-top:4px;">міні-уроків у блоці</div>
       </div>
       <div style="background:white;border-radius:16px;padding:14px 18px;box-shadow:0 2px 12px rgba(0,0,0,.07);display:flex;align-items:center;gap:12px;">
         <div style="width:38px;height:38px;border-radius:10px;background:#E0F7FA;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">📖</div>
-        <div><div style="font-size:10px;color:#AAA;font-weight:500;">Теорія</div><div style="font-size:13px;font-weight:700;">8–10 уроків / блок</div></div>
+        <div><div style="font-size:10px;color:#AAA;font-weight:500;">Теорія</div><div style="font-size:13px;font-weight:700;">4–5 міні-уроків / блок</div></div>
       </div>
       <div style="background:white;border-radius:16px;padding:14px 18px;box-shadow:0 2px 12px rgba(0,0,0,.07);display:flex;align-items:center;gap:12px;">
-        <div style="width:38px;height:38px;border-radius:10px;background:#F3E5F5;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">🗣️</div>
-        <div><div style="font-size:10px;color:#AAA;font-weight:500;">Унікально</div><div style="font-size:13px;font-weight:700;">Speaking Club · Англ.</div></div>
+        <div style="width:38px;height:38px;border-radius:10px;background:#F3E5F5;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">📅</div>
+        <div><div style="font-size:10px;color:#AAA;font-weight:500;">Набір</div><div style="font-size:13px;font-weight:700;">вер – груд · PRO1–PRO4</div></div>
       </div>
       <div style="background:white;border-radius:16px;padding:14px 18px;box-shadow:0 2px 12px rgba(0,0,0,.07);display:flex;align-items:center;gap:12px;">
         <div style="width:38px;height:38px;border-radius:10px;background:#FFF9C4;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">🎯</div>
-        <div><div style="font-size:10px;color:#AAA;font-weight:500;">Предмети</div><div style="font-size:13px;font-weight:700;">3 основних + 2 додаткових</div></div>
+        <div><div style="font-size:10px;color:#AAA;font-weight:500;">Предмети</div><div style="font-size:13px;font-weight:700;">5 предметів з куратором</div></div>
       </div>
       <div style="background:white;border-radius:16px;padding:14px 18px;box-shadow:0 2px 12px rgba(0,0,0,.07);display:flex;align-items:center;gap:12px;">
         <div style="width:38px;height:38px;border-radius:10px;background:#E8F5E9;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">📊</div>
-        <div><div style="font-size:10px;color:#AAA;font-weight:500;">Слайдів</div><div style="font-size:13px;font-weight:700;">11 · ~25 хв</div></div>
+        <div><div style="font-size:10px;color:#AAA;font-weight:500;">Слайдів</div><div style="font-size:13px;font-weight:700;">8 · ~15 хв</div></div>
       </div>
     </div>
   </div>
@@ -169,14 +201,14 @@ ul.flist li::before{content:'→';color:#3DB4BF;font-weight:800;flex-shrink:0;}
   <h2 class="stitle">Відео-пояснення PreStart <span style="font-size:14px;font-weight:500;color:#888;">· Перегляд до початку роботи</span></h2>
   <div style="display:grid;grid-template-columns:1fr 320px;gap:22px;height:calc(100% - 120px);">
     <div style="display:flex;flex-direction:column;gap:0;">
-      <a href="https://drive.google.com/file/d/1qUNvoIfcOrBzHztZxuz1JljDajpuL3RK/view?usp=sharing" target="_blank" style="display:block;width:100%;height:100%;border-radius:16px;overflow:hidden;position:relative;box-shadow:0 4px 24px rgba(0,0,0,.18);text-decoration:none;background:linear-gradient(135deg,#1A1A1A 0%,#0f3d43 50%,#3DB4BF 100%);">
+      <a href="https://youtu.be/_qKRpU8HYlw" target="_blank" style="display:block;width:100%;height:100%;border-radius:16px;overflow:hidden;position:relative;box-shadow:0 4px 24px rgba(0,0,0,.18);text-decoration:none;background:linear-gradient(135deg,#1A1A1A 0%,#0f3d43 50%,#3DB4BF 100%);">
         <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;transition:filter .2s;" onmouseover="this.style.filter='brightness(1.12)'" onmouseout="this.style.filter='brightness(1)'">
           <div style="width:88px;height:88px;background:white;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 24px rgba(0,0,0,.5);">
             <div style="width:0;height:0;border-top:16px solid transparent;border-bottom:16px solid transparent;border-left:26px solid #3DB4BF;margin-left:8px;"></div>
           </div>
         </div>
         <div style="position:absolute;top:20px;left:20px;background:rgba(255,255,255,.15);backdrop-filter:blur(6px);border-radius:10px;padding:6px 12px;font-size:11px;font-weight:700;color:white;letter-spacing:.5px;">🎬 ВІДЕО-ПОЯСНЕННЯ</div>
-        <div style="position:absolute;bottom:20px;left:0;right:0;text-align:center;color:white;font-size:13px;font-weight:700;text-shadow:0 1px 4px rgba(0,0,0,.8);">▶ Натисни, щоб переглянути на Google Drive</div>
+        <div style="position:absolute;bottom:20px;left:0;right:0;text-align:center;color:white;font-size:13px;font-weight:700;text-shadow:0 1px 4px rgba(0,0,0,.8);">▶ Натисни, щоб переглянути на YouTube</div>
       </a>
     </div>
     <div style="display:flex;flex-direction:column;gap:12px;">
@@ -185,8 +217,8 @@ ul.flist li::before{content:'→';color:#3DB4BF;font-weight:800;flex-shrink:0;}
         <ul class="flist">
           <li>Що таке PreStart і для кого він</li>
           <li>Як влаштований блок і місяць</li>
-          <li>Система потоків PRO1–PRO3</li>
-          <li>Як PreStart готує до НМТ за 1,5 роки</li>
+          
+          <li>Як PreStart закладає базу</li>
         </ul>
       </div>
       <div style="background:#1A1A1A;border-radius:14px;padding:14px 16px;color:white;">
@@ -205,38 +237,40 @@ ul.flist li::before{content:'→';color:#3DB4BF;font-weight:800;flex-shrink:0;}
 <div class="slide" id="s2">
   <div class="glow" style="width:360px;height:360px;background:#3DB4BF16;top:-80px;right:-40px;"></div>
   <div class="slide-tag">Що це</div>
-  <h2 class="stitle">PreStart: 1,5-річний маршрут до НМТ</h2>
+  <h2 class="stitle">PreStart: маршрут до НМТ з 10 класу</h2>
   <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;height:calc(100% - 120px);">
-    <div class="card anim-in" style="border-top:4px solid #3DB4BF;display:flex;flex-direction:column;gap:12px;">
+    <div data-more="PreStart перший крок у траєкторії: січень–травень, 10 клас. Далі Літня школа і Основний курс." class="card anim-in" style="border-top:4px solid #3DB4BF;display:flex;flex-direction:column;gap:12px;">
       <div class="tag tT">🎯 Для кого</div>
       <div style="font-size:14px;font-weight:800;color:#1A1A1A;">Учні 10 класу</div>
       <div style="font-size:12px;color:#555;line-height:1.5;">яким потрібна міцна база перед вступом у старшу підготовку до НМТ</div>
-      <div style="margin-top:auto;padding:10px 12px;background:#E0F7FA;border-radius:10px;font-size:12px;color:#006064;border-left:3px solid #3DB4BF;">Підготовка охоплює ключові теми з нуля — без вимог до попередньої бази</div>
+      <div class="note-hl">Точка А. Куратор перевіряє її на реальність: списано означає повторний тест.</div>
+<div class="note-hl">Теми місяця. Пишеться у свій дедлайн, а не в блоці.</div>
+<div class="note-hl">Учень одразу бачить помилки і розбирає їх з викладачем.</div>
+<div style="margin-top:auto;padding:10px 12px;background:#E0F7FA;border-radius:10px;font-size:12px;color:#006064;border-left:3px solid #3DB4BF;">Підготовка охоплює ключові теми з нуля — без вимог до попередньої бази</div>
     </div>
-    <div class="card anim-in" style="border-top:4px solid #FFD300;display:flex;flex-direction:column;gap:12px;">
+    <div data-more="Складові: теорія, ДЗ, онлайн-практикуми, вікторини, зрізи і пробні НМТ. Усе на Kwiga." class="card anim-in" style="border-top:4px solid #FFD300;display:flex;flex-direction:column;gap:12px;">
       <div class="tag tY">📦 Що включає</div>
       <ul class="flist" style="margin-top:4px;">
         <li>3 основних предмети: Укр.мова, Мат., Іст.</li>
         <li>2 додаткових: Анг.мова, Біологія</li>
-        <li>Теорія у записі (8–10 уроків/блок)</li>
-        <li>Конспекти до кожного блоку</li>
+        <li>Теорія у записі (4–5 міні-уроків/блок)</li>
         <li>Онлайн-практикуми з викладачем</li>
-        <li>Speaking Club з англійської</li>
+        
         <li>Зрізи знань та пробні НМТ</li>
-        <li>Підтримка куратора щомісяця</li>
+        <li>Куратор допоможе з конкретним моментом теми</li>
       </ul>
     </div>
-    <div class="card anim-in" style="border-top:4px solid #EB7C22;display:flex;flex-direction:column;gap:12px;">
+    <div data-more="Учень проходить PreStart і Літню школу та переходить до Основного курсу. Це маршрут до НМТ-2028." class="card anim-in" style="border-top:4px solid #EB7C22;display:flex;flex-direction:column;gap:12px;">
       <div class="tag tO">🏆 Результат</div>
-      <div style="font-size:12px;color:#555;line-height:1.6;">Учень вибудовує фундамент, проходить всі фази маршруту та доходить до реального НМТ у травні 2027 підготовленим</div>
+      <div style="font-size:12px;color:#555;line-height:1.6;">Учень вибудовує фундамент, проходить всі фази маршруту та закладає базу для НМТ-2028: далі Літня школа і Основний курс</div>
       <div style="margin-top:auto;">
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <div style="background:#F5F5F5;border-radius:8px;padding:7px 11px;text-align:center;flex:1;">
-            <div style="font-size:22px;font-weight:900;color:#3DB4BF;">3+2</div>
+            <div style="font-size:22px;font-weight:900;color:#3DB4BF;">5</div>
             <div style="font-size:9px;color:#888;font-weight:600;">предмети</div>
           </div>
           <div style="background:#F5F5F5;border-radius:8px;padding:7px 11px;text-align:center;flex:1;">
-            <div style="font-size:22px;font-weight:900;color:#FFD300;">3</div>
+            <div style="font-size:22px;font-weight:900;color:#FFD300;">4</div>
             <div style="font-size:9px;color:#888;font-weight:600;">потоки PRO</div>
           </div>
         </div>
@@ -249,58 +283,46 @@ ul.flist li::before{content:'→';color:#3DB4BF;font-weight:800;flex-shrink:0;}
 <div class="slide" id="s3">
   <div class="slide-tag">Структура блоку</div>
   <h2 class="stitle">Анатомія одного блоку <span style="font-size:14px;font-weight:500;color:#888;">· Натисни на кожну картку</span></h2>
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;height:calc(100% - 130px);">
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;height:calc(100% - 130px);">
 
     <div class="block-piece anim-in" style="background:#1A1A1A;animation-delay:0s;" onclick="revealPiece(this)">
       <div class="block-hint">👆 натисни</div>
       <div style="font-size:24px;margin-bottom:8px;">🎬</div>
       <div style="font-size:14px;font-weight:800;color:white;">Теорія</div>
-      <div style="font-size:10px;color:#FFD300;font-weight:600;margin-top:3px;">8–10 міні-уроків у записі</div>
-      <div class="block-detail" style="color:#CCC;">Концентровані відео до 15 хв кожне + конспект до кожного блоку. Більше теорії, ніж в Основному курсі — фундамент глибший.</div>
+      <div style="font-size:10px;color:#FFD300;font-weight:600;margin-top:3px;">4–5 міні-уроків у записі</div>
+      <div class="block-detail" style="color:#CCC;">Відео у записі на Kwiga. Учень дивиться їх до практикуму.</div>
     </div>
 
     <div class="block-piece anim-in" style="background:#FFD300;animation-delay:.5s;" onclick="revealPiece(this)">
       <div class="block-hint">👆 натисни</div>
       <div style="font-size:24px;margin-bottom:8px;">💻</div>
       <div style="font-size:14px;font-weight:800;color:#1A1A1A;">Онлайн-практикум</div>
-      <div style="font-size:10px;color:#5A4A4A;font-weight:600;margin-top:3px;">1 раз · 45 хв</div>
-      <div class="block-detail" style="color:#5A4A4A;">Живе заняття з викладачем. Відпрацювання завдань у форматі НМТ. Питання — відповіді в режимі реального часу.</div>
+      <div style="font-size:10px;color:#5A4A4A;font-weight:600;margin-top:3px;">60 хв · YouTube</div>
+      <div class="block-detail" style="color:#5A4A4A;">Розв’язують завдання, тему не пояснюють.</div>
     </div>
 
     <div class="block-piece anim-in" style="background:#3DB4BF;animation-delay:1s;" onclick="revealPiece(this)">
       <div class="block-hint">👆 натисни</div>
       <div style="font-size:24px;margin-bottom:8px;">🎮</div>
-      <div style="font-size:14px;font-weight:800;color:white;">Kahoot загальний</div>
-      <div style="font-size:10px;color:rgba(255,255,255,.85);font-weight:600;margin-top:3px;">1 раз · кінець місяця · 2 блоки</div>
-      <div class="block-detail" style="color:rgba(255,255,255,.9);">Одна спільна вікторина на 2 блоки наприкінці місяця — не після кожного блоку. Закріплення в ігровому форматі.</div>
+      <div style="font-size:14px;font-weight:800;color:white;">Kahoot</div>
+      <div style="font-size:10px;color:rgba(255,255,255,.85);font-weight:600;margin-top:3px;">В останньому блоці місяця велика вікторина</div>
+      <div class="block-detail" style="color:rgba(255,255,255,.9);">Вікторина Kahoot за темами блоків. В останньому блоці місяця — велика вікторина замість звичайної.</div>
     </div>
 
     <div class="block-piece anim-in" style="background:#EB7C22;animation-delay:1.5s;" onclick="revealPiece(this)">
       <div class="block-hint">👆 натисни</div>
       <div style="font-size:24px;margin-bottom:8px;">📝</div>
       <div style="font-size:14px;font-weight:800;color:white;">Домашнє завдання</div>
-      <div style="font-size:10px;color:rgba(255,255,255,.85);font-weight:600;margin-top:3px;">15 тестів на блок · після кожного міні-уроку</div>
-      <div class="block-detail" style="color:rgba(255,255,255,.9);">15 тестів на блок — по одному після кожного міні-уроку. Перевіряється автоматично. Формує регулярну навчальну дисципліну.</div>
+      <div style="font-size:10px;color:rgba(255,255,255,.85);font-weight:600;margin-top:3px;">3–5 завдань після міні-уроку · Kwiga</div>
+      <div class="block-detail" style="color:rgba(255,255,255,.9);">3–5 завдань після міні-уроку. Перевіряє, як учень засвоїв матеріал.</div>
     </div>
 
-    <div class="block-piece anim-in" style="background:#9C27B0;animation-delay:2s;" onclick="revealPiece(this)">
-      <div class="block-hint">👆 натисни</div>
-      <div style="font-size:24px;margin-bottom:8px;">🗣️</div>
-      <div style="font-size:14px;font-weight:800;color:white;">Speaking Club</div>
-      <div style="font-size:10px;color:rgba(255,255,255,.85);font-weight:600;margin-top:3px;">Тільки англ. мова ✦ унікально</div>
-      <div class="block-detail" style="color:rgba(255,255,255,.9);">Окремий розмовний клуб для учнів англ. мови. Формат: жива дискусія, розвиток Speaking для НМТ.</div>
-    </div>
+    
 
-    <div class="block-piece anim-in" style="background:white;border:2px solid #E8E8E8;animation-delay:2.5s;" onclick="revealPiece(this)">
-      <div class="block-hint">👆 натисни</div>
-      <div style="font-size:24px;margin-bottom:8px;">📊</div>
-      <div style="font-size:14px;font-weight:800;color:#1A1A1A;">Зріз знань</div>
-      <div style="font-size:10px;color:#3DB4BF;font-weight:600;margin-top:3px;">1 раз / місяць</div>
-      <div class="block-detail">Тематичний тест за місяць + імітація пробного НМТ щомісяця. Фіксує прогрес і відправляється у звіті батькам.</div>
-    </div>
+    
 
   </div>
-  <div id="reveal-progress" style="margin-top:10px;font-size:11px;color:#AAA;font-weight:600;">🔍 Відкрито: <span id="reveal-count">0</span> / 6</div>
+  <div id="reveal-progress" style="margin-top:10px;font-size:11px;color:#AAA;font-weight:600;">🔍 Відкрито: <span id="reveal-count">0</span> / 4</div>
 </div>
 
 <!-- =========== SLIDE 4: ПРЕДМЕТИ (консолідовано) =========== -->
@@ -311,297 +333,84 @@ ul.flist li::before{content:'→';color:#3DB4BF;font-weight:800;flex-shrink:0;}
     <div class="card anim-in" style="border-top:4px solid #3DB4BF;display:flex;flex-direction:column;gap:14px;">
       <div>
         <div class="tag tT">📦 Спільна структура для всіх 5 предметів</div>
-        <div style="font-size:12px;color:#666;margin-top:8px;line-height:1.5;">Кожен блок у кожному предметі побудований однаково — учень одразу орієнтується у форматі.</div>
+        <div style="font-size:12px;color:#666;margin-top:8px;line-height:1.5;">Блок — логічна частина предмету: тема, теорія, практика, перевірка.</div>
       </div>
       <ul class="flist" style="gap:10px;">
-        <li><strong>Теорія:</strong> 8–10 міні-уроків у записі (до 15 хв кожен)</li>
-        <li><strong>Практикум онлайн:</strong> 1 раз, 45 хв, з викладачем</li>
-        <li><strong>Kahoot загальний:</strong> 1 раз у кінці місяця, за 2 блоки одразу, 45 хв</li>
-        <li><strong>ДЗ:</strong> 15 тестів на блок, після кожного міні-уроку</li>
+        <li><strong>Теорія:</strong> 4–5 міні-уроків у записі</li>
+        <li><strong>Практикум онлайн:</strong> 60 хв на YouTube</li>
+        <li><strong>Kahoot:</strong> в останньому блоці місяця велика вікторина</li>
+        <li><strong>ДЗ:</strong> 3–5 завдань після міні-уроку</li>
       </ul>
-      <div style="margin-top:auto;padding:12px 14px;background:#F3E5F5;border-radius:12px;border-left:3px solid #9C27B0;font-size:12px;color:#6A1B9A;">
-        🗣️ <strong>Виняток:</strong> англ. мова додатково має Speaking Club — окремий формат розмовної практики
-      </div>
-    </div>
-
-    <div style="display:flex;flex-direction:column;gap:10px;">
-      <div style="font-size:11px;font-weight:700;color:#AAA;letter-spacing:.8px;text-transform:uppercase;margin-bottom:2px;">Основні (3)</div>
-      <div class="card anim-in" style="border-left:4px solid #FFD300;padding:12px 16px;display:flex;align-items:center;gap:12px;">
+<div style="margin-top:auto;"><div style="font-size:10px;font-weight:800;color:#AAA;letter-spacing:.3px;text-transform:uppercase;margin-bottom:6px;">Порядок блоку · натисни</div><div class="flow"><span class="flow-step pickable" data-more="Теорія: 4–5 міні-уроків у записі на Kwiga. Учень дивиться їх до практикуму.">📖 Теорія</span><span class="flow-arrow">→</span><span class="flow-step pickable" data-more="ДЗ: 3–5 завдань після міні-уроку на Kwiga. Перевіряє, як учень засвоїв матеріал.">📝 ДЗ</span><span class="flow-arrow">→</span><span class="flow-step pickable" data-more="Практикум: 60 хв онлайн на YouTube. Розв’язують завдання, тему не пояснюють.">💻 Практикум</span><span class="flow-arrow">→</span><span class="flow-step pickable" data-more="Вікторина: Kahoot, 60 хв. В останньому блоці місяця велика вікторина.">🎮 Вікторина</span></div></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px;">
+      <div style="font-size:11px;font-weight:700;color:#AAA;letter-spacing:.8px;text-transform:uppercase;margin-bottom:2px;">Предмети (5)</div>
+      <div class="subj-card anim-in" style="border-left:4px solid #FFD300;padding:12px 16px;display:flex;align-items:center;gap:12px;">
         <div style="font-size:22px;">🖊️</div>
         <div style="flex:1;">
           <div style="font-size:14px;font-weight:800;">Укр. мова</div>
-          <div style="font-size:11px;color:#666;">Повне покриття програми УМ НМТ</div>
+          
         </div>
       </div>
-      <div class="card anim-in" style="border-left:4px solid #3DB4BF;padding:12px 16px;display:flex;align-items:center;gap:12px;">
+      <div class="subj-card anim-in" style="border-left:4px solid #3DB4BF;padding:12px 16px;display:flex;align-items:center;gap:12px;">
         <div style="font-size:22px;">📐</div>
         <div style="flex:1;">
           <div style="font-size:14px;font-weight:800;">Математика</div>
-          <div style="font-size:11px;color:#666;">Алгебра + геометрія з основ</div>
+          
         </div>
       </div>
-      <div class="card anim-in" style="border-left:4px solid #EB7C22;padding:12px 16px;display:flex;align-items:center;gap:12px;">
+      <div class="subj-card anim-in" style="border-left:4px solid #EB7C22;padding:12px 16px;display:flex;align-items:center;gap:12px;">
         <div style="font-size:22px;">🏛️</div>
         <div style="flex:1;">
           <div style="font-size:14px;font-weight:800;">Історія</div>
-          <div style="font-size:11px;color:#666;">Хронологія та події НМТ</div>
+          
         </div>
       </div>
 
-      <div style="font-size:11px;font-weight:700;color:#AAA;letter-spacing:.8px;text-transform:uppercase;margin-top:6px;margin-bottom:2px;">Додаткові (2)</div>
-      <div class="card anim-in" style="border-left:4px solid #9C27B0;padding:12px 16px;display:flex;align-items:center;gap:12px;">
+      <div style="font-size:11px;font-weight:700;color:#AAA;letter-spacing:.8px;text-transform:uppercase;margin-top:6px;margin-bottom:2px;"></div>
+      <div class="subj-card" anim-in" style="border-left:4px solid #9C27B0;padding:12px 16px;display:flex;align-items:center;gap:12px;">
         <div style="font-size:22px;">🇬🇧</div>
         <div style="flex:1;">
-          <div style="font-size:14px;font-weight:800;">Англійська <span style="background:#9C27B0;color:white;font-size:9px;font-weight:700;padding:2px 8px;border-radius:10px;margin-left:4px;">+ SPEAKING CLUB</span></div>
-          <div style="font-size:11px;color:#9C27B0;font-weight:600;">Унікальний елемент — розмовний клуб у кожному блоці</div>
+          <div style="font-size:14px;font-weight:800;">Англійська </div>
+          <div style="font-size:11px;color:#9C27B0;font-weight:600;"></div>
         </div>
       </div>
-      <div class="card anim-in" style="border-left:4px solid #4CAF50;padding:12px 16px;display:flex;align-items:center;gap:12px;">
+      <div class="subj-card anim-in" style="border-left:4px solid #4CAF50;padding:12px 16px;display:flex;align-items:center;gap:12px;">
         <div style="font-size:22px;">🔬</div>
         <div style="flex:1;">
           <div style="font-size:14px;font-weight:800;">Біологія</div>
-          <div style="font-size:11px;color:#666;">Клітина, організми, еволюція, екологія</div>
+          
         </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- =========== SLIDE 5: СИСТЕМА ПОТОКІВ =========== -->
-<div class="slide" id="s5">
-  <div class="slide-tag">Потоки PRO</div>
-  <h2 class="stitle">Система потоків PRO1–PRO3 <span style="font-size:14px;font-weight:500;color:#888;">· Вибери потік</span></h2>
-  <div style="display:flex;gap:8px;margin-bottom:16px;">
-    <div class="pro-tab active" onclick="selectPro(0)">PRO 1</div>
-    <div class="pro-tab" onclick="selectPro(1)">PRO 2</div>
-    <div class="pro-tab" onclick="selectPro(2)">PRO 3</div>
-  </div>
-  <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:18px;height:calc(100% - 155px);">
-    <div>
-      <div id="pro-panel-0" class="pro-panel active">
-        <div style="background:#1A1A1A;border-radius:18px;padding:22px;color:white;margin-bottom:12px;">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
-            <div><div style="font-size:11px;color:#3DB4BF;font-weight:700;letter-spacing:1px;margin-bottom:4px;">ПОВНИЙ МАРШРУТ · 1,5 РОКИ</div><div style="font-size:26px;font-weight:900;">PRO 1</div></div>
-            <div style="text-align:right;"><div style="font-size:11px;color:#AAA;">Старт</div><div style="font-size:16px;font-weight:800;color:#3DB4BF;">Січ 2026</div></div>
-          </div>
-          <div style="display:flex;gap:10px;flex-wrap:wrap;">
-            <div style="background:rgba(61,180,191,.2);border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:#3DB4BF;">1,5 роки</div>
-            <div style="background:rgba(255,255,255,.1);border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:white;">230 блоків / 5 предм.</div>
-            <div style="background:rgba(255,211,0,.15);border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:#FFD300;">Всі фази маршруту</div>
-          </div>
-        </div>
-        <ul class="flist">
-          <li>Проходить всі фази: PreStart → Summer Camp → Новий Сезон → Воркшоп → Інтенсив</li>
-          <li>Фаза 1 (січ–трав 2026): 50 блоків, 2 бл/міс/предм</li>
-          <li>Фаза 2 (вер 2026 – трав 2027): 180 блоків, 4 бл/міс/предм</li>
-          <li>Завершується перед реальним НМТ у травні 2027</li>
-        </ul>
-      </div>
-      <div id="pro-panel-1" class="pro-panel">
-        <div style="background:#1A2A2A;border-radius:18px;padding:22px;color:white;margin-bottom:12px;">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
-            <div><div style="font-size:11px;color:#3DB4BF;font-weight:700;letter-spacing:1px;margin-bottom:4px;">СТАРТ ІЗ НОВОГО СЕЗОНУ</div><div style="font-size:26px;font-weight:900;">PRO 2</div></div>
-            <div style="text-align:right;"><div style="font-size:11px;color:#AAA;">Старт</div><div style="font-size:16px;font-weight:800;color:#3DB4BF;">Вер 2026</div></div>
-          </div>
-          <div style="display:flex;gap:10px;flex-wrap:wrap;">
-            <div style="background:rgba(61,180,191,.2);border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:#3DB4BF;">9 місяців</div>
-            <div style="background:rgba(255,255,255,.1);border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:white;">180 блоків</div>
-            <div style="background:rgba(235,124,34,.25);border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:#EB7C22;">Без фази PreStart</div>
-          </div>
-        </div>
-        <ul class="flist">
-          <li>Стартує з фази «Новий Сезон» (вересень 2026)</li>
-          <li>Включає Воркшоп (січ 2027) та Інтенсив (трав 2027)</li>
-          <li>Темп 4 бл/міс/предм</li>
-          <li>Пропускає початкову базу — для тих, хто вже має її</li>
-        </ul>
-      </div>
-      <div id="pro-panel-2" class="pro-panel">
-        <div style="background:#2A1A00;border-radius:18px;padding:22px;color:white;margin-bottom:12px;">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
-            <div><div style="font-size:11px;color:#FFD300;font-weight:700;letter-spacing:1px;margin-bottom:4px;">ФІНАЛЬНИЙ ВХІД</div><div style="font-size:26px;font-weight:900;">PRO 3</div></div>
-            <div style="text-align:right;"><div style="font-size:11px;color:#AAA;">Старт</div><div style="font-size:16px;font-weight:800;color:#FFD300;">Січ 2027</div></div>
-          </div>
-          <div style="display:flex;gap:10px;flex-wrap:wrap;">
-            <div style="background:rgba(255,211,0,.2);border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:#FFD300;">5 місяців</div>
-            <div style="background:rgba(255,255,255,.1);border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:white;">Прискорений формат</div>
-            <div style="background:rgba(235,124,34,.25);border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:#EB7C22;">Тільки фінал</div>
-          </div>
-        </div>
-        <ul class="flist">
-          <li>Стартує від Воркшопу в січні 2027</li>
-          <li>Найкоротший та найінтенсивніший формат</li>
-          <li>Максимальна концентрація пріоритетних тем перед НМТ</li>
-          <li>Спільні контрольні точки з PRO1 і PRO2</li>
-        </ul>
-      </div>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:10px;">
-      <div class="card" style="flex:1;">
-        <div style="font-size:11px;font-weight:700;color:#AAA;letter-spacing:.8px;margin-bottom:10px;">ВСІ ПОТОКИ МАЮТЬ ОДНАКОВО</div>
-        <ul class="flist">
-          <li>Теорія 8–10 уроків / блок</li>
-          <li>Практикум онлайн щомісяця</li>
-          <li>Kahoot загальний (кінець місяця)</li>
-          <li>Вступний тест (фіксація точки А)</li>
-          <li>Зріз знань 1 раз / місяць</li>
-          <li>Пробний НМТ 1 раз / місяць</li>
-        </ul>
-      </div>
-      <div style="background:#E0F7FA;border-radius:14px;padding:14px;border-left:3px solid #3DB4BF;">
-        <div style="font-size:11px;font-weight:700;color:#006064;margin-bottom:4px;">💡 Ключова обіцянка</div>
-        <div style="font-size:12px;color:#444;line-height:1.5;">Незалежно від потоку — кожен учень доходить до реального НМТ у травні 2027 підготовленим</div>
       </div>
     </div>
   </div>
 </div>
 
 <!-- =========== SLIDE 6: ТРАЄКТОРІЯ МІСЯЦІВ =========== -->
-<div class="slide" id="s6">
-  <div class="slide-tag">Маршрут PRO1</div>
-  <h2 class="stitle">Повний шлях PRO1: січ 2026 → трав 2027 <span style="font-size:14px;font-weight:500;color:#888;">· Натисни на фазу</span></h2>
-  <div style="display:flex;gap:4px;align-items:center;margin-bottom:16px;flex-wrap:nowrap;">
-    <div class="month-dot active-m" onclick="selectMonth(this,0)" style="width:auto;height:auto;padding:8px 12px;border-radius:16px;font-size:10px;white-space:nowrap;">PreStart</div>
-    <div style="flex:1;height:2px;background:linear-gradient(90deg,#3DB4BF,#E8E8E8);border-radius:2px;min-width:8px;"></div>
-    <div class="month-dot" onclick="selectMonth(this,1)" style="width:auto;height:auto;padding:8px 12px;border-radius:16px;font-size:10px;white-space:nowrap;">1:1</div>
-    <div style="flex:1;height:2px;background:#E8E8E8;border-radius:2px;min-width:8px;"></div>
-    <div class="month-dot" onclick="selectMonth(this,2)" style="width:auto;height:auto;padding:8px 12px;border-radius:16px;font-size:10px;white-space:nowrap;">Літо</div>
-    <div style="flex:1;height:2px;background:#E8E8E8;border-radius:2px;min-width:8px;"></div>
-    <div class="month-dot" onclick="selectMonth(this,3)" style="width:auto;height:auto;padding:8px 12px;border-radius:16px;font-size:10px;white-space:nowrap;">Новий Сезон</div>
-    <div style="flex:1;height:2px;background:#E8E8E8;border-radius:2px;min-width:8px;"></div>
-    <div class="month-dot" onclick="selectMonth(this,4)" style="width:auto;height:auto;padding:8px 12px;border-radius:16px;font-size:10px;white-space:nowrap;">Воркшоп</div>
-    <div style="flex:1;height:2px;background:#E8E8E8;border-radius:2px;min-width:8px;"></div>
-    <div class="month-dot" onclick="selectMonth(this,5)" style="width:auto;height:auto;padding:8px 12px;border-radius:16px;font-size:10px;white-space:nowrap;">Інтенсив</div>
-    <div style="flex:1;height:2px;background:#E8E8E8;border-radius:2px;min-width:8px;"></div>
-    <div class="month-dot" onclick="selectMonth(this,6)" style="width:auto;height:auto;padding:8px 12px;border-radius:16px;font-size:10px;white-space:nowrap;">НМТ</div>
-  </div>
-  <div id="month-card" style="background:white;border-radius:20px;padding:22px 28px;box-shadow:0 2px 16px rgba(0,0,0,.08);margin-bottom:14px;min-height:120px;border-left:5px solid #3DB4BF;transition:border-color .3s;">
-    <div style="font-size:11px;font-weight:700;color:#AAA;letter-spacing:.8px;margin-bottom:8px;" id="month-label">PRESTART · Січ – Трав 2026 · Фаза 1</div>
-    <div style="font-size:16px;font-weight:800;color:#1A1A1A;margin-bottom:8px;" id="month-title">Фундамент: вступний тест + 50 блоків базової бази</div>
-    <div style="font-size:12.5px;color:#555;line-height:1.6;" id="month-desc">Вступний тест фіксує точку А. 50 блоків за 5 місяців (2 бл/міс/предм × 5 предм). Знайомство з форматом, командою, куратором. Формування навчальних звичок.</div>
-  </div>
-  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;">
-    <div style="background:#FFFDE7;border-radius:12px;padding:11px 12px;border-top:3px solid #FFD300;">
-      <div style="font-size:10px;font-weight:700;color:#B8860B;margin-bottom:5px;">УКР. МОВА</div>
-      <div style="font-size:11px;color:#333;" id="subj0">10 блоків · 2 на місяць</div>
-    </div>
-    <div style="background:#E0F7FA;border-radius:12px;padding:11px 12px;border-top:3px solid #3DB4BF;">
-      <div style="font-size:10px;font-weight:700;color:#006064;margin-bottom:5px;">МАТЕМАТИКА</div>
-      <div style="font-size:11px;color:#333;" id="subj1">10 блоків · 2 на місяць</div>
-    </div>
-    <div style="background:#FFF3E0;border-radius:12px;padding:11px 12px;border-top:3px solid #EB7C22;">
-      <div style="font-size:10px;font-weight:700;color:#E65100;margin-bottom:5px;">ІСТОРІЯ</div>
-      <div style="font-size:11px;color:#333;" id="subj2">10 блоків · 2 на місяць</div>
-    </div>
-    <div style="background:#F3E5F5;border-radius:12px;padding:11px 12px;border-top:3px solid #9C27B0;">
-      <div style="font-size:10px;font-weight:700;color:#6A1B9A;margin-bottom:5px;">АНГЛІЙСЬКА</div>
-      <div style="font-size:11px;color:#333;" id="subj3">10 блоків + Speaking Club</div>
-    </div>
-    <div style="background:#E8F5E9;border-radius:12px;padding:11px 12px;border-top:3px solid #4CAF50;">
-      <div style="font-size:10px;font-weight:700;color:#1B5E20;margin-bottom:5px;">БІОЛОГІЯ</div>
-      <div style="font-size:11px;color:#333;" id="subj4">10 блоків · 2 на місяць</div>
-    </div>
-  </div>
-</div>
-
-<!-- =========== SLIDE 7: ШЛЯХ УЧНЯ =========== -->
-<div class="slide" id="s7">
-  <div class="slide-tag">Траєкторія</div>
-  <h2 class="stitle">Повний маршрут PreStart · 1,5 роки до НМТ</h2>
-  <div style="display:flex;flex-direction:column;gap:12px;height:calc(100% - 120px);">
-    <div style="display:flex;align-items:stretch;gap:6px;">
-      <div style="background:#3DB4BF;border-radius:14px;padding:12px 14px;color:white;flex:1.1;display:flex;flex-direction:column;">
-        <div style="font-size:9px;font-weight:700;letter-spacing:.6px;color:rgba(255,255,255,.75);margin-bottom:4px;">ЗАРАЗ · ФАЗА 1</div>
-        <div style="font-size:15px;font-weight:900;">🌱 PreStart</div>
-        <div style="font-size:9px;color:rgba(255,255,255,.85);margin-top:4px;font-weight:600;">Січ – Трав 2026</div>
-        <div style="font-size:10px;color:rgba(255,255,255,.9);line-height:1.4;margin-top:6px;">50 блоків, фундамент. Точка А.</div>
-      </div>
-      <div style="display:flex;align-items:center;font-size:16px;color:#CCC;flex-shrink:0;">→</div>
-      <div style="background:#FFF9C4;border:1.5px dashed #FFD300;border-radius:14px;padding:12px 14px;flex:0.8;display:flex;flex-direction:column;">
-        <div style="font-size:9px;font-weight:700;letter-spacing:.6px;color:#B8860B;margin-bottom:4px;">ПЕРЕХІД</div>
-        <div style="font-size:13px;font-weight:900;color:#1A1A1A;">🎯 1:1 з ПМ</div>
-        <div style="font-size:9px;color:#666;margin-top:4px;font-weight:600;">Травень 2026</div>
-        <div style="font-size:10px;color:#666;line-height:1.4;margin-top:6px;">Персональна сесія + вибір напрямку</div>
-      </div>
-      <div style="display:flex;align-items:center;font-size:16px;color:#CCC;flex-shrink:0;">→</div>
-      <div style="background:white;border-radius:14px;padding:12px 14px;flex:1;box-shadow:0 2px 10px rgba(0,0,0,.06);border-top:3px solid #FFD300;display:flex;flex-direction:column;">
-        <div style="font-size:9px;font-weight:700;letter-spacing:.6px;color:#AAA;margin-bottom:4px;">ЛІТО</div>
-        <div style="font-size:13px;font-weight:900;color:#1A1A1A;">☀️ Summer Camp</div>
-        <div style="font-size:9px;color:#666;margin-top:4px;font-weight:600;">Черв – Серп 2026</div>
-        <div style="font-size:10px;color:#666;line-height:1.4;margin-top:6px;">Літня школа, буст перед стартом</div>
-      </div>
-      <div style="display:flex;align-items:center;font-size:16px;color:#CCC;flex-shrink:0;">→</div>
-      <div style="background:#1A1A1A;border-radius:14px;padding:12px 14px;color:white;flex:1.6;display:flex;flex-direction:column;">
-        <div style="font-size:9px;font-weight:700;letter-spacing:.6px;color:#3DB4BF;margin-bottom:4px;">ФАЗА 2 · ГОЛОВНА</div>
-        <div style="font-size:15px;font-weight:900;">🚀 Новий Сезон</div>
-        <div style="font-size:9px;color:#BBB;margin-top:4px;font-weight:600;">Вер 2026 – Трав 2027</div>
-        <div style="font-size:10px;color:#DDD;line-height:1.4;margin-top:6px;">180 блоків. Всередині — Воркшоп (Січ 27) та Інтенсив (Трав 27).</div>
-      </div>
-      <div style="display:flex;align-items:center;font-size:16px;color:#CCC;flex-shrink:0;">→</div>
-      <div style="background:linear-gradient(135deg,#FFD300,#EB7C22);border-radius:14px;padding:12px 14px;flex:1.1;display:flex;flex-direction:column;color:#1A1A1A;">
-        <div style="font-size:9px;font-weight:700;letter-spacing:.6px;color:#4A2F00;margin-bottom:4px;">ЦІЛЬ · ТОЧКА Б</div>
-        <div style="font-size:15px;font-weight:900;">🏆 Реальний НМТ</div>
-        <div style="font-size:9px;color:#5A4A00;margin-top:4px;font-weight:600;">Червень 2027</div>
-        <div style="font-size:10px;color:#4A3A00;line-height:1.4;margin-top:6px;">Іспит + мотиваційний лист</div>
-      </div>
-    </div>
-
-    <div style="background:white;border-radius:14px;padding:12px 18px;box-shadow:0 2px 10px rgba(0,0,0,.06);">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-        <span style="font-size:14px;">📍</span>
-        <span style="font-size:11px;font-weight:700;color:#AAA;letter-spacing:.6px;">КЛЮЧОВІ ТОЧКИ ВСЕРЕДИНІ НОВОГО СЕЗОНУ + ФІНАЛ</span>
-      </div>
-      <div style="display:flex;gap:8px;">
-        <div style="background:#F3E5F5;border-radius:8px;padding:8px 12px;flex:1;">
-          <div style="font-size:11px;font-weight:800;color:#6A1B9A;">🛠️ Воркшоп</div>
-          <div style="font-size:10px;color:#666;">Січ 2027 · точка входу для PRO3</div>
-        </div>
-        <div style="background:#FFF3E0;border-radius:8px;padding:8px 12px;flex:1;">
-          <div style="font-size:11px;font-weight:800;color:#E65100;">⚡ Інтенсив</div>
-          <div style="font-size:10px;color:#666;">Трав 2027 · фінальний ривок</div>
-        </div>
-        <div style="background:#E0F7FA;border-radius:8px;padding:8px 12px;flex:1;">
-          <div style="font-size:11px;font-weight:800;color:#006064;">✉️ Мотиваційний лист</div>
-          <div style="font-size:10px;color:#666;">Черв 2027 · після НМТ</div>
-        </div>
-      </div>
-    </div>
-
-    <div style="background:white;border-radius:14px;padding:12px 20px;box-shadow:0 2px 8px rgba(0,0,0,.05);display:flex;align-items:center;gap:14px;">
-      <div style="font-size:22px;">💡</div>
-      <div>
-        <div style="font-size:12px;font-weight:800;color:#1A1A1A;margin-bottom:3px;">Чому PreStart тепер — окремий 1,5-річний продукт?</div>
-        <div style="font-size:11px;color:#555;line-height:1.5;">PreStart тепер не просто перед-курс, а повноцінний маршрут від фундаменту до реального НМТ. Учень заходить на один з 3 потоків (PRO1/2/3) і доходить до однієї фінішної точки — травень 2027.</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- =========== SLIDE 8: КОНТРОЛЬНІ ТОЧКИ =========== -->
 <div class="slide" id="s8">
   <div class="slide-tag">Контроль прогресу</div>
   <h2 class="stitle">Три рівні контролю знань</h2>
   <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;height:calc(100% - 120px);">
-    <div class="card anim-in" style="border-top:5px solid #1A1A1A;display:flex;flex-direction:column;gap:12px;">
+    <div data-more="Куратор перевіряє точку А на реальність. Якщо списано, це означає повторний тест." class="card anim-in" style="border-top:5px solid #1A1A1A;display:flex;flex-direction:column;gap:12px;">
       <div style="font-size:28px;">📋</div>
       <div style="font-size:18px;font-weight:800;">Вступний тест</div>
-      <div class="tag tD" style="width:fit-content;">1 раз · на старті потоку</div>
-      <div style="font-size:12px;color:#666;line-height:1.6;">Проводиться на початку кожного потоку PRO. Фіксує поточний рівень знань учня — «точку А». Відповідь на питання: з чого стартуємо?</div>
-      <div style="margin-top:auto;padding:10px 12px;background:#F5F5F5;border-radius:10px;font-size:11px;color:#666;"><strong>Хто отримує:</strong> куратор, ПМ, батьки</div>
+      <div class="tag tD" style="width:fit-content;">1 раз · на старті навчання</div>
+      <div style="font-size:12px;color:#666;line-height:1.6;">Проводиться на вході. Фіксує поточний рівень знань учня — «точку А». Відповідь на питання: з чого стартуємо?</div>
+      <div style="margin-top:auto;padding:10px 12px;background:#F5F5F5;border-radius:10px;font-size:11px;color:#666;"><strong>Хто отримує:</strong> куратор</div>
     </div>
-    <div class="card anim-in" style="border-top:5px solid #3DB4BF;display:flex;flex-direction:column;gap:12px;">
+    <div data-more="Зріз: теми місяця. Пишеться у свій дедлайн, а не в блоці." class="card anim-in" style="border-top:5px solid #3DB4BF;display:flex;flex-direction:column;gap:12px;">
       <div style="font-size:28px;">📊</div>
       <div style="font-size:18px;font-weight:800;">Зріз знань</div>
       <div class="tag tT" style="width:fit-content;">1 раз / місяць</div>
-      <div style="font-size:12px;color:#666;line-height:1.6;">Тематичний тест за матеріалом пройденого місяця. Відстежує прогрес і виявляє слабкі місця. Однаковий для всіх потоків.</div>
-      <div style="margin-top:auto;padding:10px 12px;background:#E0F7FA;border-radius:10px;font-size:11px;color:#006064;"><strong>Входить у звіт батькам</strong> щомісяця</div>
+      <div style="font-size:12px;color:#666;line-height:1.6;">Тематичний тест за матеріалом пройденого місяця. Відстежує прогрес і виявляє слабкі місця. </div>
+      <div style="margin-top:auto;padding:10px 12px;background:#E0F7FA;border-radius:10px;font-size:11px;color:#006064;"><strong>Пишеться у свій дедлайн</strong></div>
     </div>
-    <div class="card anim-in" style="border-top:5px solid #FFD300;display:flex;flex-direction:column;gap:12px;">
+    <div data-more="Пробний НМТ: на платформі з таймером. Після нього учень одразу бачить помилки і розбирає їх з викладачем." class="card anim-in" style="border-top:5px solid #FFD300;display:flex;flex-direction:column;gap:12px;">
       <div style="font-size:28px;">🏆</div>
       <div style="font-size:18px;font-weight:800;">Пробний НМТ</div>
       <div class="tag tY" style="width:fit-content;">1 раз / місяць</div>
-      <div style="font-size:12px;color:#666;line-height:1.6;">Авторська симуляція НМТ: формат, час, складність — ідентичні іспиту. Знайомство з умовами та зниження стресу.</div>
-      <div style="margin-top:auto;padding:10px 12px;background:#FFFDE7;border-radius:10px;font-size:11px;color:#B8860B;"><strong>Результат аналізує</strong> куратор предмету</div>
+      <div style="font-size:12px;color:#666;line-height:1.6;">На платформі з таймером, максимально схожий на реальний НМТ.</div>
+      <div style="margin-top:auto;padding:10px 12px;background:#FFFDE7;border-radius:10px;font-size:11px;color:#B8860B;"><strong>Розбір:</strong> учень розбирає помилки з викладачем</div>
     </div>
   </div>
 </div>
@@ -616,9 +425,8 @@ ul.flist li::before{content:'→';color:#3DB4BF;font-weight:800;flex-shrink:0;}
       <div style="background:#1A1A1A;border-radius:16px;padding:22px;color:white;">
         <div style="font-size:11px;color:#3DB4BF;font-weight:700;letter-spacing:1px;margin-bottom:6px;">📖 ЄДИНЕ ДЖЕРЕЛО ПРАВДИ</div>
         <div style="font-size:18px;font-weight:900;margin-bottom:8px;">Бриф курсу PreStart</div>
-        <div style="font-size:12px;color:#AAA;line-height:1.5;margin-bottom:16px;">Брифи всіх потоків PRO1–PRO3, деталі 1,5-річного маршруту, структура блоку — все в одному місці.</div>
+        <div style="font-size:12px;color:#AAA;line-height:1.5;margin-bottom:16px;">Бриф курсу, структура блоку — все в одному місці.</div>
         <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
-          <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:#CCC;"><span style="color:#3DB4BF;">→</span> Брифи PRO1–PRO3 по кожному потоку</div>
           <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:#CCC;"><span style="color:#3DB4BF;">→</span> Структура блоку та деталі методики</div>
           <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:#CCC;"><span style="color:#3DB4BF;">→</span> Презентація курсу для учнів і батьків</div>
         </div>
@@ -638,7 +446,8 @@ ul.flist li::before{content:'→';color:#3DB4BF;font-weight:800;flex-shrink:0;}
           <div style="font-size:18px;">💬</div>
           <div><div style="font-size:12px;font-weight:700;">Запитання — до свого ментора</div><div style="font-size:11px;color:#888;">Не знаєш? Завжди є кому запитати</div></div>
         </div>
-        <div style="margin-top:auto;padding:12px;background:#1A1A1A;border-radius:12px;color:white;font-size:12px;line-height:1.5;">
+        <div class="note-hl" style="font-size:12px;">Не зрозумів тему? Куратор допоможе з конкретним моментом. Всю тему заново не пояснює.</div>
+<div style="margin-top:auto;padding:12px;background:#1A1A1A;border-radius:12px;color:white;font-size:12px;line-height:1.5;">
           ⚠️ Актуальна інформація завжди в брифі. Презентація — для розуміння логіки.
         </div>
       </div>
@@ -657,17 +466,14 @@ ul.flist li::before{content:'→';color:#3DB4BF;font-weight:800;flex-shrink:0;}
         <div style="font-size:12px;color:#999;">Натисни на кожен пункт, коли впевнений у відповіді</div>
       </div>
       <div style="text-align:right;">
-        <div id="xp-display2" style="background:#E0F7FA;border:1px solid #3DB4BF;border-radius:20px;padding:4px 14px;font-size:14px;font-weight:800;color:#006064;">0 / 6 ✓</div>
+        <div id="xp-display2" style="background:#E0F7FA;border:1px solid #3DB4BF;border-radius:20px;padding:4px 14px;font-size:14px;font-weight:800;color:#006064;">0 / 3 ✓</div>
         <div class="xp-bar-track" style="width:160px;margin-top:8px;"><div class="xp-bar-fill" id="xp-fill2" style="width:0%;"></div></div>
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;flex:1;">
       <div class="check-item" onclick="toggleCheck2(this)"><div class="check-box">✓</div><div class="check-text">Для кого PreStart і яка його головна мета?</div></div>
-      <div class="check-item" onclick="toggleCheck2(this)"><div class="check-box">✓</div><div class="check-text">З яких 6 елементів складається один блок PreStart?</div></div>
-      <div class="check-item" onclick="toggleCheck2(this)"><div class="check-box">✓</div><div class="check-text">Чим Speaking Club відрізняється від практикуму?</div></div>
-      <div class="check-item" onclick="toggleCheck2(this)"><div class="check-box">✓</div><div class="check-text">Чим відрізняються PRO1, PRO2 і PRO3 за стартом і тривалістю?</div></div>
-      <div class="check-item" onclick="toggleCheck2(this)"><div class="check-box">✓</div><div class="check-text">Що однакове для всіх потоків PRO1–PRO3?</div></div>
-      <div class="check-item" onclick="toggleCheck2(this)"><div class="check-box">✓</div><div class="check-text">Які фази маршруту PreStart за 1,5 роки і коли реальний НМТ?</div></div>
+      <div class="check-item" onclick="toggleCheck2(this)"><div class="check-box">✓</div><div class="check-text">З яких 4 елементів складається один блок?</div></div>
+      <div class="check-item" onclick="toggleCheck2(this)"><div class="check-box">✓</div><div class="check-text">Коли проходять PreStart і Літня школа?</div></div>
     </div>
     <a href="https://docs.google.com/document/d/1ol_PbkroNKDU_zntH8wEDWMQZIEk1MvY/edit?usp=drive_link&ouid=104707284576341837049&rtpof=true&sd=true" target="_blank" style="display:flex;align-items:center;gap:12px;background:#E0F7FA;border:1px solid #3DB4BF;border-radius:12px;padding:12px 18px;text-decoration:none;color:#004D40;font-size:13px;font-weight:700;">
       <span style="font-size:18px;">📖</span> Бриф курсу PreStart <span style="margin-left:auto;color:#3DB4BF;">Відкрити →</span>
@@ -680,7 +486,7 @@ ul.flist li::before{content:'→';color:#3DB4BF;font-weight:800;flex-shrink:0;}
 
 <script>
 // ── Navigation
-const TOTAL=11; let cur=0;
+const TOTAL=document.querySelectorAll('.slide').length; let cur=0;
 const slides=document.querySelectorAll('.slide');
 const pb=document.getElementById('progress-bar');
 const scEl=document.getElementById('slide-counter');
@@ -702,7 +508,7 @@ function revealPiece(el){
   if(!el.classList.contains('revealed')){
     el.classList.add('revealed');revealCount++;
     document.getElementById('reveal-count').textContent=revealCount;
-    if(revealCount===6){setTimeout(()=>{const msg=document.createElement('div');msg.style.cssText='position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#1A1A1A;color:#3DB4BF;font-size:18px;font-weight:900;padding:14px 28px;border-radius:16px;z-index:10000;box-shadow:0 0 40px #3DB4BF44;animation:counterPop .4s ease both;';msg.textContent='🎓 Блок повністю розкрито!';document.getElementById('stage').appendChild(msg);setTimeout(()=>msg.remove(),2500);},100);}
+    if(revealCount===4){setTimeout(()=>{const msg=document.createElement('div');msg.style.cssText='position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#1A1A1A;color:#3DB4BF;font-size:18px;font-weight:900;padding:14px 28px;border-radius:16px;z-index:10000;box-shadow:0 0 40px #3DB4BF44;animation:counterPop .4s ease both;';msg.textContent='🎓 Блок повністю розкрито!';document.getElementById('stage').appendChild(msg);setTimeout(()=>msg.remove(),2500);},100);}
   } else {el.classList.remove('revealed');revealCount--;document.getElementById('reveal-count').textContent=revealCount;}
 }
 
@@ -718,39 +524,95 @@ function selectPro(idx){
   document.querySelectorAll('.pro-panel').forEach((p,i)=>p.classList.toggle('active',i===idx));
 }
 
-// ── Phase timeline (slide 6)
-const monthData=[
-  {label:'PRESTART · Січ – Трав 2026 · Фаза 1',title:'Фундамент: вступний тест + 50 блоків базової бази',desc:'Вступний тест фіксує точку А. 50 блоків за 5 місяців (2 бл/міс/предм × 5 предм). Знайомство з форматом, командою, куратором. Формування навчальних звичок.',subj:['10 блоків · 2 на місяць','10 блоків · 2 на місяць','10 блоків · 2 на місяць','10 блоків + Speaking Club','10 блоків · 2 на місяць'],color:'#3DB4BF'},
-  {label:'1:1 З МЕНЕДЖЕРОМ · Травень 2026',title:'Персональна сесія + вибір напрямку',desc:'Персональна зустріч з менеджером в кінці фази PreStart. Обговорення результатів, планування літньої школи та Нового Сезону.',subj:['—','—','—','—','—'],color:'#EB7C22'},
-  {label:'ЛІТНЯ ШКОЛА · Черв – Серп 2026',title:'Summer Camp: закріплення бази',desc:'Літня школа для закріплення матеріалу PreStart. Легкий формат між сезонами, мотиваційний буст перед Новим Сезоном.',subj:['Літня активація','Літня активація','Літня активація','Літня активація + Speaking','Літня активація'],color:'#FFD300'},
-  {label:'НОВИЙ СЕЗОН · Вер 2026 – Трав 2027 · Фаза 2',title:'Основна фаза: 180 блоків, інтенсивний темп',desc:'9 місяців інтенсивної підготовки. 180 блоків (4 бл/міс/предм × 5 предм × 9 міс). Тут стартує PRO2. Спільні контрольні точки для PRO1 і PRO2.',subj:['36 блоків · 4 на місяць','36 блоків · 4 на місяць','36 блоків · 4 на місяць','36 блоків + Speaking','36 блоків · 4 на місяць'],color:'#3DB4BF'},
-  {label:'ВОРКШОП · Січень 2027',title:'Практикум за півроку до НМТ',desc:'Спеціальний воркшоп в межах Нового Сезону. Точка входу для PRO3. Практична робота за формою НМТ.',subj:['Практикум НМТ','Практикум НМТ','Практикум НМТ','Практикум НМТ','Практикум НМТ'],color:'#9C27B0'},
-  {label:'ІНТЕНСИВ · Травень 2027',title:'Фінальний ривок перед іспитом',desc:'Останній місяць перед реальним НМТ. Розбір типових помилок, психологічна підготовка, стратегія виконання тесту.',subj:['Інтенсив','Інтенсив','Інтенсив','Інтенсив','Інтенсив'],color:'#EB7C22'},
-  {label:'РЕАЛЬНИЙ НМТ · Червень 2027 · Точка Б',title:'День іспиту + мотиваційний лист',desc:'Реальний НМТ у червні 2027. Мотиваційний лист після іспиту. Ціль маршруту досягнута.',subj:['✅ Готовий','✅ Готовий','✅ Готовий','✅ Готовий','✅ Готовий'],color:'#4CAF50'}
-];
-function selectMonth(el,idx){
-  document.querySelectorAll('.month-dot').forEach((d,i)=>{d.classList.toggle('active-m',i===idx);d.classList.toggle('passed',i<idx);});
-  const d=monthData[idx];
-  document.getElementById('month-label').textContent=d.label;
-  document.getElementById('month-title').textContent=d.title;
-  document.getElementById('month-desc').textContent=d.desc;
-  d.subj.forEach((s,i)=>{document.getElementById('subj'+i).textContent=s;});
-  document.getElementById('month-card').style.borderColor=d.color;
-}
-
-// ── Checklist (slide 9)
-let checked2=0;
 function toggleCheck2(el){
   el.classList.toggle('checked');
   checked2=document.querySelectorAll('.check-item.checked').length;
-  document.getElementById('xp-display2').textContent=checked2+' / 6 ✓';
-  document.getElementById('xp-fill2').style.width=(checked2/6*100)+'%';
-  if(el.classList.contains('checked')){showXP2(el);if(checked2===6)launchConfetti2();}
+  document.getElementById('xp-display2').textContent=checked2+' / 3 ✓';
+  document.getElementById('xp-fill2').style.width=(checked2/3*100)+'%';
+  if(el.classList.contains('checked')){showXP2(el);if(checked2===3)launchConfetti2();}
 }
 function showXP2(el){const pop=document.createElement('div');pop.className='xp-pop';pop.textContent='+1 ✓';const r=el.getBoundingClientRect();const sr=document.getElementById('stage').getBoundingClientRect();const sc=parseFloat(document.getElementById('stage').style.transform.replace('scale(',''))||1;pop.style.left=((r.right-sr.left)/sc+8)+'px';pop.style.top=((r.top-sr.top)/sc)+'px';document.getElementById('stage').appendChild(pop);setTimeout(()=>pop.remove(),900);}
 function launchConfetti2(){const colors=['#3DB4BF','#FFD300','#EB7C22','#9C27B0','#4CAF50'];for(let i=0;i<70;i++){setTimeout(()=>{const c=document.createElement('div');c.className='confetti-bit';const size=5+Math.random()*8;c.style.cssText=`left:${5+Math.random()*90}%;top:${10+Math.random()*50}%;background:${colors[Math.floor(Math.random()*colors.length)]};width:${size}px;height:${size}px;border-radius:${Math.random()>.5?'50%':'3px'};animation-duration:${1+Math.random()*.8}s;animation-delay:${Math.random()*.2}s;`;document.getElementById('stage').appendChild(c);setTimeout(()=>c.remove(),2000);},i*25);}const msg=document.createElement('div');msg.style.cssText='position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#1A1A1A;color:#3DB4BF;font-size:20px;font-weight:900;padding:16px 32px;border-radius:20px;z-index:10000;box-shadow:0 0 40px #3DB4BF44;animation:counterPop .4s ease both;';msg.textContent='🏆 PreStart засвоєно!';document.getElementById('stage').appendChild(msg);setTimeout(()=>msg.remove(),2800);}
 
 updateUI();
+
+/* --- gamification + interactivity runtime --- */
+let xp=0; const seenSlides=new Set(); const earned=new Set();
+function addXp(n){xp+=n;document.getElementById('xp-val').textContent=xp;document.getElementById('xp-bar').style.width=Math.min(100,xp/120*100)+'%';}
+function badge(k,t){if(earned.has(k))return;earned.add(k);const b=document.getElementById('badge-toast');b.textContent='🏅 '+t;b.classList.add('show');setTimeout(()=>b.classList.remove('show'),2600);}
+const _goTo0=goTo;
+goTo=function(n){const was=cur;_goTo0(n);if(cur!==was&&!seenSlides.has(cur)){seenSlides.add(cur);addXp(10);if(seenSlides.size===TOTAL)badge('explorer','Дослідник PreStart');}};
+seenSlides.add(0);addXp(10);
+const _tc0=toggleCheck2;
+toggleCheck2=function(el){const was=el.classList.contains('checked');_tc0(el);if(!was){addXp(15);if(document.querySelectorAll('.check-item.checked').length===document.querySelectorAll('.check-item').length)badge('quiz','Самоперевірку пройдено');}};
+(function(){
+  const PICK='.card,.block-piece,.flow-step';
+  const seen=new Set(); let picks=0;
+  document.querySelectorAll('.slide').forEach(s=>{
+    s.querySelectorAll(PICK).forEach((el,k)=>{
+      if(el.closest('.check-item')) return;
+      el.classList.add('pickable');
+      el.addEventListener('click',()=>{
+        el.classList.toggle('picked');
+        const key=s.id+'-'+k;
+        if(!seen.has(key)){seen.add(key);addXp(5);picks++;if(picks===10)badge('curious','Допитливий');}
+      });
+    });
+  });
+  // progress pill per slide: +3 XP per element, +25 XP when slide is complete
+  let completed=0;
+  document.querySelectorAll('.slide').forEach(s=>{
+    const items=[...s.querySelectorAll('.pickable')].filter(e=>!e.closest('.check-item'));
+    if(!items.length) return;
+    const pill=document.createElement('div');pill.className='tap-pill';
+    const update=()=>{const n=items.filter(e=>e.dataset.seen).length;pill.innerHTML='👆 Торкнись · <span>'+n+'</span> / '+items.length;
+      if(n===items.length&&!pill.classList.contains('full')){pill.classList.add('full');addXp(25);completed++;
+        if(completed===1)badge('reader','Уважний читач');pill.innerHTML='✓ Слайд вивчено · +25 XP';}};
+    items.forEach(el=>el.addEventListener('click',()=>{if(!el.dataset.seen){el.dataset.seen='1';addXp(3);update();}}));
+    s.appendChild(pill);update();
+  });
+  // shrink all-caps labels a little
+  document.querySelectorAll('.slide *').forEach(el=>{
+    if(el.children.length) return;
+    const t=el.textContent.trim();
+    if(t.length<3||t.length>60) return;
+    if(/[a-zа-яіїєґ]/.test(t)) return;
+    if(!/[А-ЯІЇЄҐ]/.test(t)) return;
+    const fs=parseFloat(getComputedStyle(el).fontSize);
+    el.style.fontSize=Math.max(10,fs*0.8)+'px';
+    el.style.letterSpacing='.3px';
+  });
+})();
+
+(function(){
+  const CSS_OK=true;
+  function host(el){ return el.classList.contains('flow-step') ? el.closest('.flow').parentElement : el; }
+  function toggleMore(el){
+    const hostEl=host(el);
+    let box=hostEl.querySelector(':scope > .more-inline');
+    if(box && box.dataset.src===el.dataset.more){ box.remove(); el.classList.remove('more-open'); return; }
+    if(!box){ box=document.createElement('div'); box.className='more-inline'; hostEl.appendChild(box); }
+    box.dataset.src=el.dataset.more;
+    box.innerHTML='<b>Деталі:</b> '+el.dataset.more;
+    box.classList.remove('pop'); void box.offsetWidth; box.classList.add('pop');
+    el.classList.add('more-open');
+  }
+  document.querySelectorAll('[data-more]').forEach(el=>{
+    el.classList.add('pickable');
+    el.addEventListener('click',()=>toggleMore(el));
+  });
+})();
+
+/* stagger runtime: assign delays to each block on slide open */
+(function(){
+  const SEL='.card,.block-piece,.flow-step,.note-hl,.check-item,.stagger';
+  function stagger(){
+    const s=document.querySelector('.slide.active'); if(!s) return;
+    s.querySelectorAll(SEL).forEach((el,i)=>el.style.setProperty('--d',Math.min(i*0.09,1.2)+'s'));
+  }
+  const _g=goTo; goTo=function(n){_g(n); stagger();};
+  stagger();
+})();
 </script>
 </body>
 </html>
